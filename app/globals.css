@@ -1,0 +1,86 @@
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply font-sans;
+  }
+}
+
+@layer components {
+  /* ── Navbar ─────────────────────────────────── */
+  .navbar {
+    @apply absolute top-0 left-0 w-full z-50 bg-white/10 backdrop-blur-sm px-[20px] py-[20px] lg:px-[30px] lg:py-[30px];
+  }
+
+  .navbar-inner {
+    @apply flex items-center justify-between w-full;
+  }
+
+  .logo-container {
+    @apply flex flex-col no-underline;
+  }
+  
+
+  .site-logo {
+    font-family: var(--font-marck-script), cursive;
+    @apply text-[32px] md:text-[42px] leading-tight text-[#18667D] no-underline whitespace-nowrap -mt-1;
+  }
+
+  .nav-links {
+    @apply hidden lg:flex items-center gap-[30px] xl:gap-[60px] list-none m-0 p-0;
+  }
+
+  .nav-link {
+    @apply font-sans text-[14px] xl:text-[16px] font-normal text-[#111555] no-underline whitespace-nowrap
+           transition-colors duration-200 hover:text-[#18667D];
+  }
+
+  /* Hamburger */
+  .hamburger {
+    @apply flex lg:hidden flex-col gap-[5px] bg-transparent border-none cursor-pointer p-1;
+  }
+
+  .hamburger-line {
+    @apply block w-[26px] h-[2px] bg-[#111555] rounded-sm transition-all duration-200;
+  }
+
+  /* Mobile dropdown */
+  .mobile-menu {
+    @apply flex flex-col list-none m-0 p-0 mt-4 gap-0;
+  }
+
+  .mobile-nav-link {
+    @apply block font-sans text-[18px] font-normal text-[#111555] no-underline
+           py-[10px] border-b border-[#111555]/10 transition-colors duration-200
+           hover:text-[#18667D];
+  }
+
+  /* ── Tablet adjustments ─────────────────────── */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .navbar {
+      @apply px-8 py-6;
+    }
+    .site-logo {
+      @apply text-[44px];
+    }
+    .nav-links {
+      @apply gap-7;
+    }
+    .nav-link {
+      @apply text-[16px];
+    }
+  }
+
+  /* ── Mobile adjustments ─────────────────────── */
+  @media (max-width: 767px) {
+    .navbar {
+      @apply px-6 py-5;
+    }
+    .site-logo {
+      @apply text-[36px];
+    }
+  }
+}

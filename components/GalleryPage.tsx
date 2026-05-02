@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import Footer from './Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -100,11 +101,107 @@ function GroupCard({
   );
 }
 
+// ─── Lightbox ──────────────────────────────────────────────────────────────────
+function Lightbox({ 
+  images, 
+  currentIndex, 
+  onClose, 
+  onNext, 
+  onPrev 
+}: { 
+  images: string[]; 
+  currentIndex: number; 
+  onClose: () => void;
+  onNext: () => void;
+  onPrev: () => void;
+}) {
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent) => setTouchStart(e.targetTouches[0].clientX);
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const diff = touchStart - touchEnd;
+
+    if (diff > 50) onNext(); // Swipe left
+    if (diff < -50) onPrev(); // Swipe right
+    setTouchStart(null);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+      if (e.key === 'ArrowRight') onNext();
+      if (e.key === 'ArrowLeft') onPrev();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    
+    // Lock scroll on both body and html
+    const originalBodyOverflow = document.body.style.overflow;
+    const originalHtmlOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = originalBodyOverflow;
+      document.documentElement.style.overflow = originalHtmlOverflow;
+    };
+  }, [onClose, onNext, onPrev]);
+
+  return (
+    <div 
+      className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-fadeIn touch-none select-none p-4 md:p-12"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+      onClick={onClose}
+    >
+      <button 
+        className="absolute top-6 right-6 md:top-10 md:right-10 text-white/40 hover:text-white z-[210] p-2 transition-colors"
+        onClick={onClose}
+      >
+        <X size={32} />
+      </button>
+
+      {/* Navigation Buttons */}
+      <button 
+        className="absolute left-6 md:left-12 bottom-10 md:bottom-22 p-3 md:p-4 bg-white/5 hover:bg-white/10 rounded-full text-white transition-all z-[210] backdrop-blur-sm"
+        onClick={(e) => { e.stopPropagation(); onPrev(); }}
+      >
+        <ChevronLeft size={24} className="md:w-8 md:h-8" />
+      </button>
+      <button 
+        className="absolute right-6 md:right-12 bottom-10 md:bottom-22 p-3 md:p-4 bg-white/5 hover:bg-white/10 rounded-full text-white transition-all z-[210] backdrop-blur-sm"
+        onClick={(e) => { e.stopPropagation(); onNext(); }}
+      >
+        <ChevronRight size={24} className="md:w-8 md:h-8" />
+      </button>
+
+      {/* Main Image Container */}
+      <div 
+        className="relative w-full h-full flex flex-col items-center justify-center pointer-events-none" 
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img 
+          src={images[currentIndex]} 
+          alt="" 
+          className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
+        />
+        <div className="absolute bottom-12 md:bottom-24 left-1/2 -translate-x-1/2 text-white/50 text-sm md:text-lg font-medium tracking-[0.3em] uppercase">
+          {currentIndex + 1} / {images.length}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── GroupDetailView ───────────────────────────────────────────────────────────
 function GroupDetailView({
   group,
+  onImageClick,
 }: {
   group: ArtGroup;
+  onImageClick: (index: number) => void;
 }) {
   return (
     <div className="w-full animate-fadeIn">
@@ -115,7 +212,9 @@ function GroupDetailView({
         {group.images.map((src, i) => (
           <div
             key={i}
-            className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm"
+            id={`gallery-item-${i}`}
+            className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm scroll-mt-24"
+            onClick={() => onImageClick(i)}
           >
             <ImageWithFade 
               src={src} 
@@ -132,6 +231,34 @@ function GroupDetailView({
 // ─── GalleryPage Component ──────────────────────────────────────────────────────
 export default function GalleryPage({ title, groups }: GalleryPageProps) {
   const [selectedGroup, setSelectedGroup] = useState<ArtGroup | null>(null);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
+  const handleNext = useCallback(() => {
+    if (lightboxIndex !== null && selectedGroup) {
+      setLightboxIndex((lightboxIndex + 1) % selectedGroup.images.length);
+    }
+  }, [lightboxIndex, selectedGroup]);
+
+  const handlePrev = useCallback(() => {
+    if (lightboxIndex !== null && selectedGroup) {
+      setLightboxIndex((lightboxIndex - 1 + selectedGroup.images.length) % selectedGroup.images.length);
+    }
+  }, [lightboxIndex, selectedGroup]);
+
+  const handleClose = useCallback(() => {
+    const lastIndex = lightboxIndex;
+    setLightboxIndex(null);
+    
+    // Give the browser a moment to restore scroll ability before jumping
+    if (lastIndex !== null) {
+      setTimeout(() => {
+        const el = document.getElementById(`gallery-item-${lastIndex}`);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
+    }
+  }, [lightboxIndex]);
 
   function handleSelect(group: ArtGroup) {
     setSelectedGroup(group);
@@ -184,7 +311,10 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
       {/* ── Content ── */}
       <div className="relative z-30">
         {selectedGroup ? (
-          <GroupDetailView group={selectedGroup} />
+          <GroupDetailView 
+            group={selectedGroup} 
+            onImageClick={(idx) => setLightboxIndex(idx)} 
+          />
         ) : (
           <div className="flex flex-col">
             {groups.map((group, i) => (
@@ -198,6 +328,16 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
           </div>
         )}
       </div>
+
+      {lightboxIndex !== null && selectedGroup && (
+        <Lightbox 
+          images={selectedGroup.images} 
+          currentIndex={lightboxIndex} 
+          onClose={handleClose}
+          onNext={handleNext}
+          onPrev={handlePrev}
+        />
+      )}
 
       <Footer />
     </div>

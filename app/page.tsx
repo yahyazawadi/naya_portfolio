@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
+import PortfolioPrefetcher from "../components/PortfolioPrefetcher";
 
 const portfolioItems = [
   {
@@ -59,16 +60,22 @@ export default function Home() {
           DO NOT TOUCH THIS SECTION.
       */}
       <div className="absolute left-0 top-[1500px] pointer-events-none select-none z-[100]">
-        <img
+        <Image
           src="/vectors/main_left_circles.png"
           alt="Decorative background circles"
+          width={242}
+          height={2493}
+          priority
           className="w-[180px] md:w-[240px] lg:w-[300px] h-auto opacity-90"
         />
       </div>
       <div className="absolute right-0 top-[1500px] pointer-events-none select-none z-[100]">
-        <img
+        <Image
           src="/vectors/main_right_circles.png"
           alt="Decorative background circles"
+          width={295}
+          height={2349}
+          priority
           className="w-[180px] md:w-[240px] lg:w-[300px] h-auto opacity-90"
         />
       </div>
@@ -82,29 +89,41 @@ export default function Home() {
       */}
       <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
         {/* Upper cloud layer */}
-        <img
+        <Image
           src="/images/cloud_up.webp"
           alt=""
+          width={1920}
+          height={1080}
+          priority
           className="relative w-full h-auto block z-10"
         />
 
         {/* Lower cloud layer */}
-        <img
+        <Image
           src="/images/cloud_down.webp"
           alt=""
+          width={1920}
+          height={1080}
+          priority
           className="relative w-full h-auto block z-10 -mt-[12vw]"
         />
 
         {/* Character + Vectors overlay */}
         <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[10vw] overflow-hidden">
-          <img
+          <Image
             src="/vectors/mainpagebackgroundcirclescopy.png"
             alt=""
+            width={1865}
+            height={562}
+            priority
             className="absolute w-[180%] md:w-[140%] max-w-none h-auto opacity-90"
           />
-          <img
+          <Image
             src="/images/nayaherself.webp"
             alt="Naya"
+            width={1200}
+            height={1697}
+            priority
             className="relative w-[85%] md:w-[60%] max-w-[850px] h-auto z-10 drop-shadow-2xl"
           />
         </div>
@@ -186,6 +205,9 @@ export default function Home() {
         {/* ── Section 5: About & Contact ── */}
         <Footer hideStrips />
       </div>
+
+      {/* Silent background prefetching */}
+      <PortfolioPrefetcher />
     </div>
   );
 }

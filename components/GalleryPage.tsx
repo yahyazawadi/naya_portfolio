@@ -49,12 +49,24 @@ function GroupCard({
       }`}
       onClick={onSelect}
     >
-      <div className="relative overflow-hidden">
+      <div className="relative overflow-hidden bg-white/5 rounded-sm" style={{ minHeight: '260px' }}>
         <img
           src={group.coverImage}
           alt={group.title}
-          className="w-full h-[260px] md:h-[340px] lg:h-[380px] object-cover transition-transform duration-500 group-hover/img:scale-[1.04]"
+          onLoad={(e) => {
+            (e.target as HTMLImageElement).parentElement?.classList.remove('bg-white/5');
+            (e.target as HTMLImageElement).style.opacity = '1';
+          }}
+          className="w-full h-[260px] md:h-[340px] lg:h-[380px] object-cover transition-all duration-700 opacity-0 group-hover/img:scale-[1.04]"
+          ref={(img) => {
+            if (img?.complete) {
+              img.style.opacity = '1';
+              img.parentElement?.classList.remove('bg-white/5');
+            }
+          }}
         />
+        {/* Simple CSS-only skeleton pulse */}
+        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] pointer-events-none" />
         <div className="absolute inset-0 bg-[#48ABBF]/0 group-hover/img:bg-black/30 transition-all duration-300 flex items-center justify-center">
           <span className="text-white text-[16px] font-semibold opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-black/50 px-6 py-3 rounded-full backdrop-blur-sm tracking-wide">
             View Gallery →
@@ -93,13 +105,28 @@ function GroupDetailView({
         {group.images.map((src, i) => (
           <div
             key={i}
-            className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in"
+            className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm"
+            style={{ minHeight: '200px' }}
           >
             <img
               src={src}
               alt={`${group.title} ${i + 1}`}
-              className="w-full h-auto object-cover transition-transform duration-500 group-hover/tile:scale-[1.03]"
+              loading="lazy"
+              onLoad={(e) => {
+                (e.target as HTMLImageElement).parentElement?.classList.remove('bg-white/5');
+              }}
+              className="w-full h-auto object-cover transition-all duration-700 opacity-0 group-hover/tile:scale-[1.03]"
+              style={{ display: 'block' }}
+              onMouseOver={(e) => (e.currentTarget.style.opacity = '1')} // Fallback if onload missed
+              ref={(img) => {
+                if (img?.complete) {
+                  img.style.opacity = '1';
+                  img.parentElement?.classList.remove('bg-white/5');
+                }
+              }}
             />
+            {/* Simple CSS-only skeleton pulse */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] pointer-events-none" />
           </div>
         ))}
       </div>

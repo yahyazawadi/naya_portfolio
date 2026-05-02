@@ -1,6 +1,8 @@
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
+import { unstable_cache } from 'next/cache';
+import { revalidatePath } from 'next/cache';
 
 interface PortfolioGroupData {
   id?: number;
@@ -23,6 +25,7 @@ export async function savePortfolioGroup(data: PortfolioGroupData) {
     .bind(data.category, data.title, data.description, data.coverImage, imagesJson)
     .run();
     
+    revalidatePath('/');
     return { success: true };
   } catch (err: any) {
     console.error("D1 Save Error:", err);
@@ -52,6 +55,7 @@ export async function updatePortfolioGroup(id: number, data: Partial<PortfolioGr
     .bind(...values)
     .run();
 
+    revalidatePath('/');
     return { success: true };
   } catch (err: any) {
     console.error("D1 Update Error:", err);
@@ -63,6 +67,7 @@ export async function deletePortfolioGroup(id: number) {
   try {
     const db = getRequestContext().env.DB;
     await db.prepare("DELETE FROM portfolio_groups WHERE id = ?").bind(id).run();
+    revalidatePath('/');
     return { success: true };
   } catch (err: any) {
     console.error("D1 Delete Error:", err);
@@ -70,25 +75,29 @@ export async function deletePortfolioGroup(id: number) {
   }
 }
 
-export async function getPortfolioGroups(category: string) {
-  try {
-    const db = getRequestContext().env.DB;
-    const { results } = await db.prepare(
-      "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
-    )
-    .bind(category)
-    .all();
+export const getPortfolioGroups = unstable_cache(
+  async (category: string) => {
+    try {
+      const db = getRequestContext().env.DB;
+      const { results } = await db.prepare(
+        "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
+      )
+      .bind(category)
+      .all();
 
-    return results.map((row: any) => ({
-      ...row,
-      images: JSON.parse(row.images as string),
-      coverImage: row.cover_image,
-    }));
-  } catch (err) {
-    console.error("D1 Fetch Error:", err);
-    return [];
-  }
-}
+      return results.map((row: any) => ({
+        ...row,
+        images: JSON.parse(row.images as string),
+        coverImage: row.cover_image,
+      }));
+    } catch (err) {
+      console.error("D1 Fetch Error:", err);
+      return [];
+    }
+  },
+  ['portfolio-groups'],
+  { revalidate: 3600, tags: ['portfolio'] }
+);
 
 export async function getAllPortfolioGroups() {
   try {

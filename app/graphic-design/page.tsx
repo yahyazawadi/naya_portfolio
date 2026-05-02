@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Graphic Design",
-  description: "Professional graphic design work created using Adobe Illustrator and Photoshop.",
+  description: "Professional graphic design portfolio of Naya Al-Khoury, featuring branding and visual assets created in Adobe Illustrator and Photoshop.",
 };
 
 export const runtime = 'edge';

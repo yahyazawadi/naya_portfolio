@@ -30,11 +30,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Naya Al-Khoury | Portfolio",
+    default: "Naya Al-Khoury | Digital & Traditional Artist | Portfolio",
     template: "%s | Naya Al-Khoury",
   },
-  description: "Explore the digital and traditional art portfolio of Naya Al-Khoury. Featuring illustrations, graphic design, animation, and motion graphics.",
-  keywords: ["Naya Al-Khoury", "Portfolio", "Digital Art", "Illustration", "Graphic Design", "Animation", "Spacetoon Artist", "Fine Arts Damascus"],
+  description: "Official portfolio of Naya Al-Khoury. Specializing in digital illustrations, traditional art, graphic design, and animation. Experience stories told through vibrant visual art.",
+  keywords: ["Naya Al-Khoury", "Artist Portfolio", "Digital Art Damascus", "Traditional Illustration", "Graphic Designer Syria", "Motion Graphics", "Spacetoon Storyboard Artist", "Fine Arts Damascus"],
   authors: [{ name: "Naya Al-Khoury" }],
   creator: "Naya Al-Khoury",
   openGraph: {
@@ -43,20 +43,20 @@ export const metadata: Metadata = {
     url: "https://nayaalkhoury.com",
     siteName: "Naya Al-Khoury Portfolio",
     title: "Naya Al-Khoury | Digital & Traditional Artist",
-    description: "Digital art, illustrations, graphic design and animation portfolio.",
+    description: "Explore the artistic world of Naya Al-Khoury: Digital illustrations, traditional crafts, graphic design, and motion graphics.",
     images: [
       {
         url: "/images/DigitalArt&Illustration.webp",
         width: 1200,
         height: 630,
-        alt: "Naya Al-Khoury Portfolio Preview",
+        alt: "Naya Al-Khoury Art Portfolio",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Naya Al-Khoury | Portfolio",
-    description: "Digital & Traditional Artist Portfolio",
+    title: "Naya Al-Khoury | Artist Portfolio",
+    description: "Digital & Traditional Art, Illustration, Graphic Design, and Animation.",
     images: ["/images/DigitalArt&Illustration.webp"],
   },
   robots: {

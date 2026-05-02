@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Traditional Art & Crafts",
-  description: "Traditional paintings made with water and acrylic colors, clay crafts, and more.",
+  description: "A showcase of traditional art by Naya Al-Khoury, including water and acrylic paintings, clay sculptures, and handmade crafts.",
 };
 
 export const runtime = 'edge';

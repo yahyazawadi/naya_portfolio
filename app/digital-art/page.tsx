@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Digital Art & Illustrations",
-  description: "A collection of digital artworks and illustrations created using Krita, StylusX, and Clip Studio Paint.",
+  description: "Explore the digital art gallery of Naya Al-Khoury, featuring illustrations created with Krita, StylusX, and Clip Studio Paint.",
 };
 
 export const runtime = 'edge';

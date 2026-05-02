@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Animations & Motion Graphics",
-  description: "Animations and motion graphics projects created with Krita, Adobe Animate, and After Effects.",
+  description: "Animation and motion graphics portfolio of Naya Al-Khoury. Featuring projects created with Krita, Adobe Animate, and After Effects.",
 };
 
 export const runtime = 'edge'; // Required for Cloudflare D1 in Next.js

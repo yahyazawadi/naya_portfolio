@@ -52,7 +52,8 @@ export default function Home() {
       </div>
 
       {/* 
-          CRITICAL: Background circles/strips for the main page. 
+          CRITICAL: (ill kill you if you touch this)
+          Background circles/strips for the main page. 
           Moved to root to prevent clipping by wrappers.
           Set to z-100 to ensure they are always visible on the sides.
           DO NOT TOUCH THIS SECTION.

@@ -83,6 +83,11 @@ export default function Footer({ hideStrips = false }: FooterProps) {
             </div>
           </div>
 
+          {/* 
+              CRITICAL: (ill kill you if you touch this) 
+              This container handles the perfect scale and positioning 
+              for the footer artwork. DO NOT TOUCH.
+          */}
           {/* Right side — relative with high z-index to overlap divider */}
           <div className="relative w-full md:w-[55%] flex justify-center md:justify-end z-50">
             <img

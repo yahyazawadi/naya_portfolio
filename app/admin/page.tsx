@@ -7,6 +7,7 @@ import { Upload, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle, Chevron
 import Link from 'next/link';
 import { uploadImage } from '../actions/upload';
 import { savePortfolioGroup, getAllPortfolioGroups, deletePortfolioGroup, updatePortfolioGroup } from '../actions/portfolio';
+import { logout } from '../actions/auth';
 
 const categories = [
   { id: 'digital-art', label: 'Digital art & Illustrations' },
@@ -196,10 +197,18 @@ export default function AdminDashboard() {
         {/* Navigation & Tabs */}
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-12 gap-8">
           <div>
-            <Link href="/" className="flex items-center gap-2 text-[#48ABBF] hover:text-white transition-colors mb-4 no-underline">
-              <ChevronLeft size={20} />
-              Back to Portfolio
-            </Link>
+            <div className="flex items-center gap-6 mb-4">
+              <Link href="/" className="flex items-center gap-2 text-[#48ABBF] hover:text-white transition-colors no-underline">
+                <ChevronLeft size={20} />
+                Back to Portfolio
+              </Link>
+              <button 
+                onClick={() => logout()}
+                className="text-red-400/80 hover:text-red-400 text-sm transition-colors flex items-center gap-2"
+              >
+                Logout
+              </button>
+            </div>
             <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-white to-[#48ABBF] bg-clip-text text-transparent">
               Admin Portal
             </h1>
@@ -444,22 +453,6 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
-      <style jsx global>{`
-        .custom-scrollbar::-webkit-scrollbar {
-          width: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-          background: rgba(255, 255, 255, 0.02);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(72, 171, 191, 0.3);
-          border-radius: 10px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-          background: rgba(72, 171, 191, 0.5);
-        }
-      `}</style>
     </div>
   );
 }

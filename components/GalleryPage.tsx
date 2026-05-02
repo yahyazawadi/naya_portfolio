@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Footer from './Footer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -232,6 +233,29 @@ function GroupDetailView({
 export default function GalleryPage({ title, groups }: GalleryPageProps) {
   const [selectedGroup, setSelectedGroup] = useState<ArtGroup | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+  
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Handle Initial Deep Link (by Title/Slug)
+  useEffect(() => {
+    const groupSlug = searchParams.get('id');
+    if (groupSlug) {
+      const targetSlug = groupSlug.toLowerCase();
+      const group = groups.find(g => {
+        const currentSlug = g.title
+          .replace(/&/g, 'and')
+          .replace(/[^a-zA-Z0-9]/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '')
+          .toLowerCase();
+        return currentSlug === targetSlug;
+      });
+      if (group) {
+        setSelectedGroup(group);
+      }
+    }
+  }, [searchParams, groups]);
 
   const handleNext = useCallback(() => {
     if (lightboxIndex !== null && selectedGroup) {
@@ -263,11 +287,24 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
   function handleSelect(group: ArtGroup) {
     setSelectedGroup(group);
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Update URL with formatted Slug
+    const slug = group.title
+      .replace(/&/g, 'and')
+      .replace(/[^a-zA-Z0-9]/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+    const url = new URL(window.location.href);
+    url.searchParams.set('id', slug);
+    window.history.pushState({}, '', url.toString());
   }
 
   function handleBack() {
     setSelectedGroup(null);
     window.scrollTo({ top: 0, behavior: 'instant' });
+    // Clear URL param
+    const url = new URL(window.location.href);
+    url.searchParams.delete('id');
+    window.history.pushState({}, '', url.toString());
   }
 
   const headerTitle = selectedGroup ? selectedGroup.title : title;

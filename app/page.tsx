@@ -83,14 +83,14 @@ export default function Home() {
       <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
         {/* Upper cloud layer */}
         <img
-          src="/images/cloud_up.png"
+          src="/images/cloud_up.webp"
           alt=""
           className="relative w-full h-auto block z-10"
         />
 
         {/* Lower cloud layer */}
         <img
-          src="/images/cloud_down.png"
+          src="/images/cloud_down.webp"
           alt=""
           className="relative w-full h-auto block z-10 -mt-[12vw]"
         />
@@ -103,7 +103,7 @@ export default function Home() {
             className="absolute w-[180%] md:w-[140%] max-w-none h-auto opacity-90"
           />
           <img
-            src="/images/nayaherself.png"
+            src="/images/nayaherself.webp"
             alt="Naya"
             className="relative w-[85%] md:w-[60%] max-w-[850px] h-auto z-10 drop-shadow-2xl"
           />

@@ -47,14 +47,23 @@ export default function RootLayout({
               (function() {
                 function applyZoom() {
                   if (window.innerWidth > 1024) {
-                    document.body.style.zoom = "75%";
+                    // Check if 'zoom' is supported (Chrome, Safari, Edge)
+                    if (document.body.style.zoom !== undefined) {
+                      document.body.style.zoom = "75%";
+                    } else {
+                      // Fallback for Firefox
+                      document.body.style.transform = "scale(0.75)";
+                      document.body.style.transformOrigin = "top left";
+                      document.body.style.width = "133.33%";
+                    }
                   } else {
                     document.body.style.zoom = "100%";
+                    document.body.style.transform = "none";
+                    document.body.style.width = "100%";
                   }
                 }
                 // Apply on load
                 applyZoom();
-                // Optional: Re-apply on resize if needed
                 window.addEventListener('resize', applyZoom);
               })();
             `,

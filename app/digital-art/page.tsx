@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export const runtime = 'edge';
+export const revalidate = 0;
 
 export default async function DigitalArtPage() {
   const groups = await getPortfolioGroups('digital-art');

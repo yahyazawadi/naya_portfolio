@@ -1,7 +1,6 @@
 'use server'
 
 import { getRequestContext } from '@cloudflare/next-on-pages';
-import { unstable_cache } from 'next/cache';
 import { revalidatePath } from 'next/cache';
 
 interface PortfolioGroupData {
@@ -75,29 +74,25 @@ export async function deletePortfolioGroup(id: number) {
   }
 }
 
-export const getPortfolioGroups = unstable_cache(
-  async (category: string) => {
-    try {
-      const db = getRequestContext().env.DB;
-      const { results } = await db.prepare(
-        "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
-      )
-      .bind(category)
-      .all();
+export async function getPortfolioGroups(category: string) {
+  try {
+    const db = getRequestContext().env.DB;
+    const { results } = await db.prepare(
+      "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
+    )
+    .bind(category)
+    .all();
 
-      return results.map((row: any) => ({
-        ...row,
-        images: JSON.parse(row.images as string),
-        coverImage: row.cover_image,
-      }));
-    } catch (err) {
-      console.error("D1 Fetch Error:", err);
-      return [];
-    }
-  },
-  ['portfolio-groups'],
-  { revalidate: 3600, tags: ['portfolio'] }
-);
+    return results.map((row: any) => ({
+      ...row,
+      images: JSON.parse(row.images as string),
+      coverImage: row.cover_image,
+    }));
+  } catch (err) {
+    console.error("D1 Fetch Error:", err);
+    return [];
+  }
+}
 
 export async function getAllPortfolioGroups() {
   try {

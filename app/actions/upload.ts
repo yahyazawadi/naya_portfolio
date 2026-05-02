@@ -24,14 +24,19 @@ export async function uploadImage(formData: FormData) {
     const fileExtension = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
 
+    // Determine Public URL base
+    const r2PublicUrl = getRequestContext().env.NEXT_PUBLIC_R2_PUBLIC_URL || process.env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-49f6712bf69144dbb92c254052a438e3.r2.dev';
+
     // Try to use Cloudflare R2 Binding first (Production)
     try {
       const bucket = getRequestContext().env.BUCKET;
       if (bucket) {
+        console.log(`Uploading to R2 Binding: ${fileName}`);
         await bucket.put(fileName, buffer, {
           httpMetadata: { contentType: file.type }
         });
-        const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+        const publicUrl = `${r2PublicUrl}/${fileName}`;
+        console.log(`Upload Success (Binding). URL: ${publicUrl}`);
         return { success: true, url: publicUrl };
       }
     } catch (e) {
@@ -47,7 +52,8 @@ export async function uploadImage(formData: FormData) {
     });
 
     await s3.send(command);
-    const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+    const publicUrl = `${r2PublicUrl}/${fileName}`;
+    console.log(`Upload Success (S3). URL: ${publicUrl}`);
     
     return { success: true, url: publicUrl };
   } catch (err) {

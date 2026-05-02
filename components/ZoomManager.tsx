@@ -8,20 +8,24 @@ export default function ZoomManager() {
       const html = document.documentElement;
       const body = document.body;
       
-      // Ensure we target the body correctly
       if (!body) return;
 
-      // Force 75% zoom
+      const width = window.innerWidth;
+      const isMobile = width <= 1024;
+      const scale = isMobile ? 0.85 : 0.75;
+      const scalePercent = isMobile ? "85%" : "75%";
+      const fallbackWidth = isMobile ? "117.647%" : "133.333%"; // 1/0.85 and 1/0.75
+
       // Check if 'zoom' is supported (Chrome, Safari, Edge)
       if (body.style.zoom !== undefined) {
-        body.style.zoom = "75%";
+        body.style.zoom = scalePercent;
         body.style.width = "auto";
         body.style.transform = "none";
       } else {
         // Fallback for Firefox
-        body.style.transform = "scale(0.75)";
+        body.style.transform = `scale(${scale})`;
         body.style.transformOrigin = "top left";
-        body.style.width = "133.333%";
+        body.style.width = fallbackWidth;
       }
       
       html.style.overflowX = "hidden";

@@ -1,3 +1,5 @@
+import Footer from "../../components/Footer";
+
 export default function AnimationPage() {
   return (
     <div className="relative w-full min-h-screen bg-[#051C30] overflow-hidden">
@@ -7,7 +9,7 @@ export default function AnimationPage() {
       {/* Page title */}
       <div className="absolute top-[80px] md:top-[100px] left-0 right-0 flex justify-center px-4">
         <h1
-          className="font-grover text-[#48ABBF] text-center text-[40px] sm:text-[56px] md:text-[72px] lg:text-[96px] leading-tight"
+          className="font-grover text-[#48ABBF] text-center text-[32px] sm:text-[40px] md:text-[56px] lg:text-[72px] leading-tight"
         >
           Animations &amp; Motion Graphics
         </h1>
@@ -74,6 +76,9 @@ export default function AnimationPage() {
           <circle cx="35" cy="35" r="32.5" stroke="#DBEDF1" strokeWidth="5" />
         </svg>
       </div>
+
+      {/* Reusable Footer Component specifically configured for new pages */}
+      <Footer />
     </div>
   );
 }

@@ -15,6 +15,7 @@ const config: Config = {
         script: ["var(--font-marck-script)", "cursive"],
         accent: ["var(--font-la-belle-aurore)", "cursive"],
         sans: ["var(--font-inter)", "sans-serif"],
+        grover: ["var(--font-irish-grover)", "cursive"],
       },
     },
   },

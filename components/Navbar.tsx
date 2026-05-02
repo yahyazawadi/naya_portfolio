@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const navLinks = [
@@ -13,20 +14,22 @@ const navLinks = [
 
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const pathname = usePathname();
+  const isDark = pathname !== "/";
 
   return (
-    <nav className="navbar">
+    <nav className={`navbar ${isDark ? "dark-nav" : ""}`}>
       <div className="navbar-inner">
         {/* Logo */}
         <Link href="/" className="logo-container">
-          <span className="site-logo">Naya Al-Khoury</span>
+          <span className={`site-logo ${isDark ? "!text-[#48ABBF]" : ""}`}>Naya Al-Khoury</span>
         </Link>
 
         {/* Desktop links */}
         <ul className="nav-links">
           {navLinks.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} className="nav-link">
+              <Link href={link.href} className={`nav-link ${isDark ? "!text-white hover:!text-[#48ABBF]" : ""}`}>
                 {link.label}
               </Link>
             </li>

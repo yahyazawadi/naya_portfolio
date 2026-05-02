@@ -1,4 +1,5 @@
-import { Marck_Script, Inter, La_Belle_Aurore } from "next/font/google";
+import { Marck_Script, Inter, La_Belle_Aurore, Irish_Grover } from "next/font/google";
+import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
@@ -12,6 +13,12 @@ const laBelleAurore = La_Belle_Aurore({
   weight: "400",
   subsets: ["latin"],
   variable: "--font-la-belle-aurore",
+});
+
+const irishGrover = Irish_Grover({
+  weight: "400",
+  subsets: ["latin"],
+  variable: "--font-irish-grover",
 });
 
 const inter = Inter({
@@ -30,8 +37,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable}`}>
-      <body className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} font-sans`}>
+    <html lang="en" className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable}`}>
+      <body className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable} font-sans`}>
         <Navbar />
         <main>{children}</main>
       </body>

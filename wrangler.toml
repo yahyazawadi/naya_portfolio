@@ -1,8 +1,0 @@
-name = "naya-portfolio"
-compatibility_flags = [ "nodejs_compat" ]
-pages_build_output_dir = ".vercel/output/static"
-
-[[d1_databases]]
-binding = "DB"
-database_name = "naya-db"
-database_id = "6e8bde04-e7e1-4e4f-a725-c18cd54b3ff4"

@@ -29,9 +29,47 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "Naya Al-Khoury | Portfolio",
-  description: "Digital art, illustrations, graphic design and more.",
+  title: {
+    default: "Naya Al-Khoury | Portfolio",
+    template: "%s | Naya Al-Khoury",
+  },
+  description: "Explore the digital and traditional art portfolio of Naya Al-Khoury. Featuring illustrations, graphic design, animation, and motion graphics.",
+  keywords: ["Naya Al-Khoury", "Portfolio", "Digital Art", "Illustration", "Graphic Design", "Animation", "Spacetoon Artist", "Fine Arts Damascus"],
+  authors: [{ name: "Naya Al-Khoury" }],
+  creator: "Naya Al-Khoury",
+  openGraph: {
+    type: "website",
+    locale: "en_US",
+    url: "https://nayaalkhoury.com",
+    siteName: "Naya Al-Khoury Portfolio",
+    title: "Naya Al-Khoury | Digital & Traditional Artist",
+    description: "Digital art, illustrations, graphic design and animation portfolio.",
+    images: [
+      {
+        url: "/images/DigitalArt&Illustration.webp",
+        width: 1200,
+        height: 630,
+        alt: "Naya Al-Khoury Portfolio Preview",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Naya Al-Khoury | Portfolio",
+    description: "Digital & Traditional Artist Portfolio",
+    images: ["/images/DigitalArt&Illustration.webp"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+  icons: {
+    icon: "/vectors/naya_icon.png",
+    apple: "/vectors/naya_icon.png",
+  },
 };
+
+import ZoomManager from "../components/ZoomManager";
 
 export default function RootLayout({
   children,
@@ -41,36 +79,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable}`}>
       <head>
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                function applyZoom() {
-                  if (window.innerWidth > 1024) {
-                    // Check if 'zoom' is supported (Chrome, Safari, Edge)
-                    if (document.body.style.zoom !== undefined) {
-                      document.body.style.zoom = "75%";
-                    } else {
-                      // Fallback for Firefox
-                      document.body.style.transform = "scale(0.75)";
-                      document.body.style.transformOrigin = "top left";
-                      document.body.style.width = "133.33%";
-                    }
-                  } else {
-                    document.body.style.zoom = "100%";
-                    document.body.style.transform = "none";
-                    document.body.style.width = "100%";
-                  }
-                }
-                // Apply on load
-                applyZoom();
-                window.addEventListener('resize', applyZoom);
-              })();
-            `,
-          }}
-        />
+        <meta name="viewport" content="width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=0" />
       </head>
       <body className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable} font-sans`}>
+        <ZoomManager />
         <Navbar />
         <main>{children}</main>
       </body>

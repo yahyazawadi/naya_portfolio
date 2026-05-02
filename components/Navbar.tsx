@@ -5,10 +5,10 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 
 const navLinks = [
-  { label: "Digital art & Illustrations", href: "/digital-art" },
-  { label: "Traditional art & Crafts", href: "/traditional-art" },
+  { label: "Digital Art & Illustrations", href: "/digital-art" },
+  { label: "Traditional Art & Crafts", href: "/traditional-art" },
   { label: "Graphic Design", href: "/graphic-design" },
-  { label: "Animation & Motion Graphic", href: "/animation" },
+  { label: "Animation & Motion Graphics", href: "/animation" },
   { label: "About me", href: "#about-me" },
 ];
 

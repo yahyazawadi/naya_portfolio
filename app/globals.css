@@ -18,8 +18,11 @@ html {
 }
 
 @layer base {
-  body {
+  html, body {
     @apply font-sans;
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
   }
 }
 

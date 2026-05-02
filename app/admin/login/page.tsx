@@ -33,8 +33,7 @@ export default function LoginPage() {
         <div className="bg-[#0F314D]/40 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-2xl">
           <div className="text-center mb-10">
             <h1 
-              style={{ fontFamily: 'var(--font-irish-grover), cursive' }}
-              className="text-[#48ABBF] text-4xl mb-2"
+              className="font-grover text-[#48ABBF] text-4xl mb-2"
             >
               Admin Access
             </h1>

@@ -4,7 +4,7 @@ interface FooterProps {
 
 export default function Footer({ hideStrips = false }: FooterProps) {
   return (
-    <div className="relative w-full mt-32">
+    <div className="relative w-full mt-4 md:mt-8">
       {/* Decorative Strips for Footer Only */}
       {!hideStrips && (
         <div className="absolute bottom-0 left-0 right-0 h-[1000px] pointer-events-none select-none z-20">
@@ -30,7 +30,7 @@ export default function Footer({ hideStrips = false }: FooterProps) {
         {/* Dark Divider Bar */}
         <div className="w-full h-12 md:h-16 bg-[#0B1D32] mb-16 md:mb-24" />
 
-        <div className="relative z-40 max-w-[1650px] mx-auto px-6 md:px-12 lg:px-20 flex flex-col md:flex-row justify-between items-center gap-12">
+        <div className="relative z-40 max-w-[1650px] mx-auto px-6 md:px-12 lg:px-20 flex flex-col-reverse md:flex-row justify-between items-center gap-12">
           {/* Left side */}
           <div className="relative z-10 w-full md:w-[45%]">
             <h2 className="text-white text-[28px] md:text-[36px] lg:text-[48px] font-bold leading-[1.05] tracking-tight">

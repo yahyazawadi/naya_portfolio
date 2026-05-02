@@ -32,8 +32,7 @@ function GroupCard({
   const textBlock = (
     <div className="flex-1 flex flex-col gap-5 py-4">
       <h2
-        style={{ fontFamily: 'var(--font-irish-grover), cursive' }}
-        className="text-[#48ABBF] text-[26px] md:text-[32px] lg:text-[38px] leading-tight"
+        className="font-grover text-[#48ABBF] text-[26px] md:text-[32px] lg:text-[38px] leading-tight"
       >
         {group.title}:
       </h2>
@@ -146,8 +145,7 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
 
         {/* Title */}
         <h1
-          style={{ fontFamily: 'var(--font-irish-grover), cursive' }}
-          className="text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[52px] leading-tight"
+          className="font-grover text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[52px] leading-tight"
         >
           {headerTitle}
         </h1>

@@ -21,7 +21,12 @@ export default function Footer({ hideStrips = false }: FooterProps) {
         </div>
       )}
 
-      <section id="about-me" className="relative z-10 w-full bg-[#0F314D] overflow-hidden pb-32">
+      {/* 
+          CRITICAL: DO NOT add overflow-hidden to this section. 
+          This allows the character artwork and circles to overflow 
+          upwards into the main content as requested by the user. 
+      */}
+      <section id="about-me" className="relative z-10 w-full bg-[#0F314D] pb-32">
         {/* Dark Divider Bar */}
         <div className="w-full h-12 md:h-16 bg-[#0B1D32] mb-16 md:mb-24" />
 
@@ -78,8 +83,8 @@ export default function Footer({ hideStrips = false }: FooterProps) {
             </div>
           </div>
 
-          {/* Right side */}
-          <div className="relative w-full md:w-[55%] flex justify-center md:justify-end">
+          {/* Right side — relative with high z-index to overlap divider */}
+          <div className="relative w-full md:w-[55%] flex justify-center md:justify-end z-50">
             <img
               src="/vectors/bottompagecirclesandnaya.png"
               alt="Naya with decorative circles"

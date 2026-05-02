@@ -51,10 +51,35 @@ export default function Home() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 2 — Clouds + Character + Vectors
-          ═══════════════════════════════════════════════ */}
-      <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-10 overflow-hidden">
+      {/* 
+          CRITICAL: Background circles/strips for the main page. 
+          Moved to root to prevent clipping by wrappers.
+          Set to z-100 to ensure they are always visible on the sides.
+          DO NOT TOUCH THIS SECTION.
+      */}
+      <div className="absolute left-0 top-[1500px] pointer-events-none select-none z-[100]">
+        <img
+          src="/vectors/main_left_circles.png"
+          alt=""
+          className="w-[180px] md:w-[240px] lg:w-[300px] h-auto opacity-90"
+        />
+      </div>
+      <div className="absolute right-0 top-[1500px] pointer-events-none select-none z-[100]">
+        <img
+          src="/vectors/main_right_circles.png"
+          alt=""
+          className="w-[180px] md:w-[240px] lg:w-[300px] h-auto opacity-90"
+        />
+      </div>
+
+      {/* 
+          CRITICAL: DO NOT add overflow-hidden to this section. 
+          This allows the character PNG to visually overlap/overflow 
+          as requested by the user. 
+          Elevated z-index to z-60 to ensure it overlaps everything (including navbar).
+          DO NOT TOUCH THIS SECTION'S OVERFLOW OR Z-INDEX.
+      */}
+      <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
         {/* Upper cloud layer */}
         <img
           src="/images/cloud_up.png"
@@ -91,20 +116,6 @@ export default function Home() {
           CONTENT WRAPPER (Sections 3, 4, & 5)
           ═══════════════════════════════════════════════ */}
       <div className="relative w-full z-20">
-        {/* --- Shared Background Decorative Elements (Strips) --- */}
-        {/* Original main page strips that stretch all the way down */}
-        <div className="absolute inset-0 pointer-events-none select-none z-10">
-          <img
-            src="/vectors/main_left_circles.png"
-            alt=""
-            className="absolute left-0 -top-[100px] w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90"
-          />
-          <img
-            src="/vectors/main_right_circles.png"
-            alt=""
-            className="absolute right-0 -top-[100px] w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90"
-          />
-        </div>
 
         {/* ── Section 3 & 4: Intro & Grid ── */}
         <div className="relative z-20">
@@ -172,7 +183,7 @@ export default function Home() {
         </div>
 
         {/* ── Section 5: About & Contact ── */}
-        <Footer />
+        <Footer hideStrips />
       </div>
     </div>
   );

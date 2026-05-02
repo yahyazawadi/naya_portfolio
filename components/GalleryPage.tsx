@@ -126,6 +126,7 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
 
   return (
     <div className="relative w-full min-h-screen bg-[#051C30] overflow-hidden">
+      {/* CRITICAL: DO NOT change overflow-hidden on this root div. It is needed for this page. */}
       
       {/* ── Header bar ── */}
       <div className="w-full bg-[#0F314D] flex items-center justify-center relative z-40

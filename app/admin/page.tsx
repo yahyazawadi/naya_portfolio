@@ -129,8 +129,14 @@ export default function AdminDashboard() {
       if (thumbnail) {
         const thumbFormData = new FormData();
         thumbFormData.append('file', thumbnail);
-        const thumbRes = await uploadImage(thumbFormData);
-        if (thumbRes.error) throw new Error(`Thumbnail upload failed: ${thumbRes.error}`);
+        const thumbFetch = await fetch('/api/upload', { method: 'POST', body: thumbFormData });
+        
+        if (!thumbFetch.ok) {
+          const errData = await thumbFetch.json().catch(() => ({}));
+          throw new Error(errData.error || `Thumbnail upload failed (${thumbFetch.status})`);
+        }
+        
+        const thumbRes = await thumbFetch.json();
         finalCoverImage = thumbRes.url!;
         setProgress(20);
       }
@@ -141,8 +147,15 @@ export default function AdminDashboard() {
         for (let i = 0; i < totalToUpload; i++) {
           const formData = new FormData();
           formData.append('file', gallery[i]);
-          const res = await uploadImage(formData);
-          if (res.error) throw new Error(`Gallery image ${i+1} failed: ${res.error}`);
+          
+          const uploadFetch = await fetch('/api/upload', { method: 'POST', body: formData });
+          
+          if (!uploadFetch.ok) {
+            const errData = await uploadFetch.json().catch(() => ({}));
+            throw new Error(`Gallery image ${i+1} failed: ${errData.error || uploadFetch.status}`);
+          }
+          
+          const res = await uploadFetch.json();
           finalGallery.push(res.url!);
           setProgress(20 + Math.floor(((i + 1) / totalToUpload) * 70));
         }

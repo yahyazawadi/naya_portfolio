@@ -136,8 +136,8 @@ export default function AdminDashboard() {
           throw new Error(errData.error || `Thumbnail upload failed (${thumbFetch.status})`);
         }
         
-        const thumbRes = await thumbFetch.json();
-        finalCoverImage = thumbRes.url!;
+        const thumbRes = (await thumbFetch.json()) as { url: string };
+        finalCoverImage = thumbRes.url;
         setProgress(20);
       }
 
@@ -155,8 +155,8 @@ export default function AdminDashboard() {
             throw new Error(`Gallery image ${i+1} failed: ${errData.error || uploadFetch.status}`);
           }
           
-          const res = await uploadFetch.json();
-          finalGallery.push(res.url!);
+          const res = (await uploadFetch.json()) as { url: string };
+          finalGallery.push(res.url);
           setProgress(20 + Math.floor(((i + 1) / totalToUpload) * 70));
         }
       }

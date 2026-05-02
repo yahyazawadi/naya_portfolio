@@ -4,8 +4,6 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getRequestContext } from '@cloudflare/next-on-pages';
 
-export const runtime = 'edge';
-
 export async function login(formData: FormData) {
   const username = formData.get('username');
   const password = formData.get('password');

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 
+export const runtime = 'edge';
+
 const marckScript = Marck_Script({
   weight: "400",
   subsets: ["latin"],

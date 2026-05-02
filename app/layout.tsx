@@ -40,6 +40,27 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable}`}>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                function applyZoom() {
+                  if (window.innerWidth > 1024) {
+                    document.body.style.zoom = "75%";
+                  } else {
+                    document.body.style.zoom = "100%";
+                  }
+                }
+                // Apply on load
+                applyZoom();
+                // Optional: Re-apply on resize if needed
+                window.addEventListener('resize', applyZoom);
+              })();
+            `,
+          }}
+        />
+      </head>
       <body className={`${marckScript.variable} ${laBelleAurore.variable} ${inter.variable} ${irishGrover.variable} font-sans`}>
         <Navbar />
         <main>{children}</main>

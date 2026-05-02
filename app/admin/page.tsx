@@ -132,7 +132,7 @@ export default function AdminDashboard() {
         const thumbFetch = await fetch('/api/upload', { method: 'POST', body: thumbFormData });
         
         if (!thumbFetch.ok) {
-          const errData = await thumbFetch.json().catch(() => ({}));
+          const errData = (await thumbFetch.json().catch(() => ({}))) as { error?: string };
           throw new Error(errData.error || `Thumbnail upload failed (${thumbFetch.status})`);
         }
         
@@ -151,7 +151,7 @@ export default function AdminDashboard() {
           const uploadFetch = await fetch('/api/upload', { method: 'POST', body: formData });
           
           if (!uploadFetch.ok) {
-            const errData = await uploadFetch.json().catch(() => ({}));
+            const errData = (await uploadFetch.json().catch(() => ({}))) as { error?: string };
             throw new Error(`Gallery image ${i+1} failed: ${errData.error || uploadFetch.status}`);
           }
           

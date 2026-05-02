@@ -1,0 +1,7 @@
+name = "naya-portfolio"
+pages_build_output_dir = ".next"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "naya-db"
+database_id = "6e8bde04-e7e1-4e4f-a725-c18cd54b3ff4"

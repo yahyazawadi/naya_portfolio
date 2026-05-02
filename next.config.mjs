@@ -1,7 +1,15 @@
+import { setupDevPlatform } from '@cloudflare/next-on-pages/next-dev';
+
+// Initialize the Cloudflare developer platform for local development
+if (process.env.NODE_ENV === 'development') {
+    await setupDevPlatform();
+}
+
+/** @type {import('next').NextConfig} */
 const nextConfig = {
-    output: 'export', // <--- Added
-    trailingSlash: true, // <--- Added (optional, but recommended for static exports)
     images: {
-        unoptimized: true, // <--- Added (required for static export)
+        unoptimized: true,
     },
 };
+
+export default nextConfig;

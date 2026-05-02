@@ -1,3 +1,5 @@
+export const runtime = 'edge';
+
 import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
@@ -91,7 +93,7 @@ export default function Home() {
       <div className="relative w-full z-20">
         {/* --- Shared Background Decorative Elements (Strips) --- */}
         {/* Original main page strips that stretch all the way down */}
-        <div className="absolute inset-0 pointer-events-none select-none z-20">
+        <div className="absolute inset-0 pointer-events-none select-none z-10">
           <img
             src="/vectors/main_left_circles.png"
             alt=""
@@ -105,7 +107,7 @@ export default function Home() {
         </div>
 
         {/* ── Section 3 & 4: Intro & Grid ── */}
-        <div className="relative z-10">
+        <div className="relative z-20">
           {/* Intro Text */}
           <div className="relative z-40 text-center px-6 -mt-[12vw] pb-32">
             <p className="font-sans text-white text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[850px] mx-auto">
@@ -170,7 +172,7 @@ export default function Home() {
         </div>
 
         {/* ── Section 5: About & Contact ── */}
-        <Footer hideStrips />
+        <Footer />
       </div>
     </div>
   );

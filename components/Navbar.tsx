@@ -9,7 +9,7 @@ const navLinks = [
   { label: "Traditional art & Crafts", href: "/traditional-art" },
   { label: "Graphic Design", href: "/graphic-design" },
   { label: "Animation & Motion Graphic", href: "/animation" },
-  { label: "About me", href: "/about" },
+  { label: "About me", href: "#about-me" },
 ];
 
 export default function Navbar() {

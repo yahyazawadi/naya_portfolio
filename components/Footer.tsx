@@ -21,7 +21,7 @@ export default function Footer({ hideStrips = false }: FooterProps) {
         </div>
       )}
 
-      <section className="relative z-10 w-full bg-[#0F314D] overflow-hidden pb-32">
+      <section id="about-me" className="relative z-10 w-full bg-[#0F314D] overflow-hidden pb-32">
         {/* Dark Divider Bar */}
         <div className="w-full h-12 md:h-16 bg-[#0B1D32] mb-16 md:mb-24" />
 

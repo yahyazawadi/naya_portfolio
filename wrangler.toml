@@ -1,5 +1,5 @@
 name = "naya-portfolio"
-pages_build_output_dir = ".next"
+pages_build_output_dir = ".vercel/output"
 
 [[d1_databases]]
 binding = "DB"

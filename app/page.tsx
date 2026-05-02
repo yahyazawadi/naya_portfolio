@@ -116,12 +116,12 @@ export default function Home() {
       {/* ═══════════════════════════════════════════════
           CONTENT WRAPPER (Sections 3, 4, & 5)
           ═══════════════════════════════════════════════ */}
-      <div className="relative w-full z-20">
+      <div className="relative w-full">
 
         {/* ── Section 3 & 4: Intro & Grid ── */}
-        <div className="relative z-20">
+        <div className="relative">
           {/* Intro Text */}
-          <div className="relative z-40 text-center px-6 mt-[5vw] md:-mt-[12vw] pb-16 md:pb-32">
+          <div className="relative z-70 text-center px-6 mt-[5vw] md:-mt-[12vw] pb-16 md:pb-32">
             <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
               Hi, I&apos;m{" "}
               <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">
@@ -134,7 +134,7 @@ export default function Home() {
           </div>
 
           {/* The Grid */}
-          <div className="relative z-30 max-w-[1650px] mx-auto px-4 md:px-10 lg:px-20 pb-4 md:pb-8 flex flex-col gap-y-32">
+          <div className="relative z-[110] max-w-[1650px] mx-auto px-4 md:px-10 lg:px-20 pb-4 md:pb-8 flex flex-col gap-y-32">
             {/* Row 1 */}
             <div className="grid grid-cols-1 md:grid-cols-[1100fr_506fr] gap-x-16 gap-y-12 md:gap-y-0 items-start">
               {[portfolioItems[0], portfolioItems[1]].map((item) => (

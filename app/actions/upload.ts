@@ -1,5 +1,7 @@
 'use server'
 
+export const runtime = 'edge';
+
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getRequestContext } from "@cloudflare/next-on-pages";
 

@@ -13,3 +13,7 @@ NEXT_PUBLIC_R2_PUBLIC_URL = "https://pub-49f6712bf69144dbb92c254052a438e3.r2.dev
 binding = "DB"
 database_name = "naya-db"
 database_id = "6e8bde04-e7e1-4e4f-a725-c18cd54b3ff4"
+
+[[r2_buckets]]
+binding = "BUCKET"
+bucket_name = "naya-assets"

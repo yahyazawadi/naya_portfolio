@@ -1,6 +1,7 @@
 'use server'
 
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { getRequestContext } from "@cloudflare/next-on-pages";
 
 const s3 = new S3Client({
   region: "auto",
@@ -23,6 +24,21 @@ export async function uploadImage(formData: FormData) {
     const fileExtension = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
 
+    // Try to use Cloudflare R2 Binding first (Production)
+    try {
+      const bucket = getRequestContext().env.BUCKET;
+      if (bucket) {
+        await bucket.put(fileName, buffer, {
+          httpMetadata: { contentType: file.type }
+        });
+        const publicUrl = `${process.env.NEXT_PUBLIC_R2_PUBLIC_URL}/${fileName}`;
+        return { success: true, url: publicUrl };
+      }
+    } catch (e) {
+      console.log("R2 Binding not found, falling back to S3 Client (Local Dev)");
+    }
+
+    // Fallback to S3 Client (for Local Development)
     const command = new PutObjectCommand({
       Bucket: process.env.R2_BUCKET_NAME,
       Key: fileName,
@@ -35,7 +51,7 @@ export async function uploadImage(formData: FormData) {
     
     return { success: true, url: publicUrl };
   } catch (err) {
-    console.error("R2 Upload Error:", err);
+    console.error("Upload Error:", err);
     return { error: "Upload failed" };
   }
 }

@@ -43,7 +43,7 @@ export default function Home() {
           SECTION 1 — City skyline (Main Background)
           ═══════════════════════════════════════════════ */}
       <div className="relative w-full overflow-hidden z-0">
-        <div className="relative w-[130%] md:w-[110%] -left-[15%] md:-left-[5%]">
+        <div className="relative w-[150%] md:w-[110%] -left-[25%] md:-left-[5%]">
           <img
             src="/images/city.webp"
             alt="City Background"
@@ -87,7 +87,7 @@ export default function Home() {
           Elevated z-index to z-60 to ensure it overlaps everything (including navbar).
           DO NOT TOUCH THIS SECTION'S OVERFLOW OR Z-INDEX.
       */}
-      <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
+      <div className="relative w-full -mt-[36vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
         {/* Upper cloud layer */}
         <Image
           src="/images/cloud_up.webp"
@@ -143,11 +143,11 @@ export default function Home() {
           <div className="relative z-70 text-center px-6 mt-[5vw] md:-mt-[12vw] pb-16 md:pb-32">
             <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
               Hi, I&apos;m{" "}
-              <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">
+              <span className="font-accent text-[1.8em] md:text-[2.5em] text-[#3FE2FF] align-middle px-1 leading-none">
                 Naya
               </span>
               ! I&apos;m a digital &amp; traditional artist,
-              <br className="hidden sm:block" />
+              <br />
               illustrator, graphic designer and animator.
             </h1>
           </div>

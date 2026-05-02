@@ -1,19 +1,25 @@
-export default function Footer() {
+interface FooterProps {
+  hideStrips?: boolean;
+}
+
+export default function Footer({ hideStrips = false }: FooterProps) {
   return (
     <div className="relative w-full mt-32">
       {/* Decorative Strips for Footer Only */}
-      <div className="absolute bottom-0 left-0 right-0 h-[1000px] pointer-events-none select-none z-20">
-        <img
-          src="/vectors/main_left_circles.png"
-          alt=""
-          className="absolute left-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
-        />
-        <img
-          src="/vectors/main_right_circles.png"
-          alt=""
-          className="absolute right-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
-        />
-      </div>
+      {!hideStrips && (
+        <div className="absolute bottom-0 left-0 right-0 h-[1000px] pointer-events-none select-none z-20">
+          <img
+            src="/vectors/main_left_circles.png"
+            alt=""
+            className="absolute left-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
+          />
+          <img
+            src="/vectors/main_right_circles.png"
+            alt=""
+            className="absolute right-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
+          />
+        </div>
+      )}
 
       <section className="relative z-10 w-full bg-[#0F314D] overflow-hidden pb-32">
         {/* Dark Divider Bar */}

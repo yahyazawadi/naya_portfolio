@@ -90,14 +90,8 @@ export default function Home() {
           ═══════════════════════════════════════════════ */}
       <div className="relative w-full z-20">
         {/* --- Shared Background Decorative Elements (Strips) --- */}
-        {/* Masked to fade out at the bottom so it doesn't clash with the Footer strips */}
-        <div 
-          className="absolute inset-0 pointer-events-none select-none z-20"
-          style={{
-            maskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)',
-            WebkitMaskImage: 'linear-gradient(to bottom, black 50%, transparent 100%)'
-          }}
-        >
+        {/* Original main page strips that stretch all the way down */}
+        <div className="absolute inset-0 pointer-events-none select-none z-20">
           <img
             src="/vectors/main_left_circles.png"
             alt=""
@@ -176,7 +170,7 @@ export default function Home() {
         </div>
 
         {/* ── Section 5: About & Contact ── */}
-        <Footer />
+        <Footer hideStrips />
       </div>
     </div>
   );

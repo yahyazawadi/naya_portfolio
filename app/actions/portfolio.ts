@@ -73,11 +73,14 @@ export async function deletePortfolioGroup(id: number) {
 export async function getPortfolioGroups(category: string) {
   try {
     const db = getRequestContext().env.DB;
+    console.log(`Fetching D1 for category: ${category}`);
     const { results } = await db.prepare(
       "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
     )
     .bind(category)
     .all();
+
+    console.log(`D1 Results for ${category}:`, results?.length || 0);
 
     return results.map((row: any) => ({
       ...row,
@@ -93,10 +96,13 @@ export async function getPortfolioGroups(category: string) {
 export async function getAllPortfolioGroups() {
   try {
     const db = getRequestContext().env.DB;
+    console.log("Fetching all D1 records");
     const { results } = await db.prepare(
       "SELECT * FROM portfolio_groups ORDER BY created_at DESC"
     )
     .all();
+
+    console.log("D1 All Results:", results?.length || 0);
 
     return results.map((row: any) => ({
       ...row,

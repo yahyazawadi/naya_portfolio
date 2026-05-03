@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import Footer from "../components/Footer";
 import PortfolioPrefetcher from "../components/PortfolioPrefetcher";
+import HeroParallax from "../components/HeroParallax";
 
 const portfolioItems = [
   {
@@ -39,16 +40,70 @@ const portfolioItems = [
 export default function Home() {
   return (
     <div className="relative w-full bg-[#0B1D32]">
-      {/* ═══════════════════════════════════════════════
-          SECTION 1 — City skyline (Main Background)
-          ═══════════════════════════════════════════════ */}
-      <div className="relative w-full overflow-hidden z-0">
-        <div className="relative w-[130%] md:w-[110%] -left-[15%] md:-left-[5%]">
-          <img
-            src="/images/city.webp"
-            alt="City Background"
-            className="w-full h-auto block object-cover"
+      {/* 
+          ANIMATED HERO (Desktop Only)
+      */}
+      <div className="hidden lg:block">
+        <HeroParallax />
+      </div>
+
+      {/* 
+          STATIC HERO (Mobile Only)
+          Keeping the original code exactly as it was for stability.
+      */}
+      <div className="lg:hidden">
+        {/* SECTION 1 — City skyline */}
+        <div className="relative w-full overflow-hidden z-0">
+          <div className="relative w-[130%] md:w-[110%] -left-[15%] md:-left-[5%]">
+            <img
+              src="/images/city.webp"
+              alt="City Background"
+              className="w-full h-auto block object-cover"
+            />
+          </div>
+        </div>
+
+        {/* SECTION 2 — Clouds & Character */}
+        <div className="relative w-full -mt-[45vw] md:-mt-[40vw] z-60">
+          {/* Upper cloud layer */}
+          <Image
+            src="/images/cloud_up.webp"
+            alt=""
+            width={1920}
+            height={1080}
+            priority
+            className="relative w-full h-auto block z-10"
           />
+
+          {/* Lower cloud layer */}
+          <Image
+            src="/images/cloud_down.webp"
+            alt=""
+            width={1920}
+            height={1080}
+            priority
+            className="relative w-full h-auto block z-10 -mt-[12vw]"
+          />
+
+          {/* Character + Vectors overlay */}
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[10vw] overflow-hidden">
+            <Image
+              src="/vectors/mainpagebackgroundcirclescopy.png"
+              alt=""
+              width={1865}
+              height={562}
+              priority
+              className="absolute w-[180%] md:w-[140%] max-w-none h-auto opacity-90"
+            />
+            <Image
+              src="/images/nayaherself.webp"
+              alt="Naya"
+              width={1200}
+              height={1697}
+              priority
+              className="relative w-[85%] md:w-[60%] max-w-[850px] h-auto z-10 drop-shadow-2xl"
+            />
+          </div>
         </div>
       </div>
 
@@ -80,55 +135,6 @@ export default function Home() {
         />
       </div>
 
-      {/* 
-          CRITICAL: DO NOT add overflow-hidden to this section. 
-          This allows the character PNG to visually overlap/overflow 
-          as requested by the user. 
-          Elevated z-index to z-60 to ensure it overlaps everything (including navbar).
-          DO NOT TOUCH THIS SECTION'S OVERFLOW OR Z-INDEX.
-      */}
-      <div className="relative w-full -mt-[45vw] md:-mt-[40vw] lg:-mt-[35vw] z-60">
-        {/* Upper cloud layer */}
-        <Image
-          src="/images/cloud_up.webp"
-          alt=""
-          width={1920}
-          height={1080}
-          priority
-          className="relative w-full h-auto block z-10"
-        />
-
-        {/* Lower cloud layer */}
-        <Image
-          src="/images/cloud_down.webp"
-          alt=""
-          width={1920}
-          height={1080}
-          priority
-          className="relative w-full h-auto block z-10 -mt-[12vw]"
-        />
-
-        {/* Character + Vectors overlay */}
-        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[10vw] overflow-hidden">
-          <Image
-            src="/vectors/mainpagebackgroundcirclescopy.png"
-            alt=""
-            width={1865}
-            height={562}
-            priority
-            className="absolute w-[180%] md:w-[140%] max-w-none h-auto opacity-90"
-          />
-          <Image
-            src="/images/nayaherself.webp"
-            alt="Naya"
-            width={1200}
-            height={1697}
-            priority
-            className="relative w-[85%] md:w-[60%] max-w-[850px] h-auto z-10 drop-shadow-2xl"
-          />
-        </div>
-      </div>
-
       {/* ═══════════════════════════════════════════════
           SECTION 3 & 4 — Content Area
           ═══════════════════════════════════════════════ */}
@@ -140,7 +146,7 @@ export default function Home() {
         {/* ── Section 3 & 4: Intro & Grid ── */}
         <div className="relative">
           {/* Intro Text */}
-          <div className="relative z-70 text-center px-6 mt-[5vw] md:-mt-[12vw] pb-16 md:pb-32">
+          <div className="relative z-70 text-center px-6 mt-[5vw] lg:mt-[-5vw] pb-16 md:pb-32">
             <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
               Hi, I&apos;m{" "}
               <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">

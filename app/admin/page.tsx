@@ -309,7 +309,7 @@ export default function AdminDashboard() {
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <label className="cursor-pointer bg-[#48ABBF] text-[#051C30] px-4 py-2 rounded-lg font-bold text-sm">
                            Change Asset
-                           <input type="file" className="hidden" accept="image/*,video/*" onChange={handleThumbnailChange} />
+                           <input type="file" className="hidden" accept="image/*,video/*,image/heic,image/heif,video/quicktime,video/mp4,video/webm" onChange={handleThumbnailChange} />
                          </label>
                       </div>
                     </div>
@@ -320,7 +320,7 @@ export default function AdminDashboard() {
                       border-2 border-dashed rounded-2xl cursor-pointer transition-all
                       ${thumbnail ? 'border-[#48ABBF] bg-[#48ABBF]/5' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}
                     `}>
-                      <input type="file" className="hidden" accept="image/*,video/*" onChange={handleThumbnailChange} />
+                      <input type="file" className="hidden" accept="image/*,video/*,image/heic,image/heif,video/quicktime,video/mp4,video/webm" onChange={handleThumbnailChange} />
                       {thumbnail ? (
                         <span className="text-sm text-[#48ABBF] font-medium">{thumbnail.name}</span>
                       ) : (
@@ -338,7 +338,7 @@ export default function AdminDashboard() {
                   <label className="cursor-pointer text-[#48ABBF] hover:text-white transition-colors text-xs font-bold flex items-center gap-2">
                     <PlusCircle size={14} />
                     Add More
-                    <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={handleGalleryChange} />
+                    <input type="file" multiple className="hidden" accept="image/*,video/*,image/heic,image/heif,video/quicktime,video/mp4,video/webm" onChange={handleGalleryChange} />
                   </label>
                 </div>
 

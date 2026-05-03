@@ -16,6 +16,11 @@ const categories = [
   { id: 'animation', label: 'Animation & Motion Graphic' },
 ];
 
+const isVideo = (src: string) => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+  return typeof src === 'string' && videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
+};
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage'>('upload');
   const [existingItems, setExistingItems] = useState<any[]>([]);
@@ -79,15 +84,16 @@ export default function AdminDashboard() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const handleDelete = async (id: number) => {
-    if (!confirm('Are you sure you want to delete this collection?')) return;
+  const handleDelete = async (item: any) => {
+    if (!confirm(`Are you sure you want to delete "${item.title}"?`)) return;
     
+    const id = item.id;
     // Optimistic UI update
     const previousItems = [...existingItems];
     setExistingItems(prev => prev.filter(i => i.id !== id));
     
     try {
-      const res = await deletePortfolioGroup(Number(id)); // Ensure it's a number
+      const res = await deletePortfolioGroup(Number(id), item.category); 
       if (res.error) {
         throw new Error(res.error);
       }
@@ -295,11 +301,15 @@ export default function AdminDashboard() {
                   <label className="text-sm font-semibold tracking-wider text-[#48ABBF] uppercase">Cover Image</label>
                   {editingId && existingCoverImage && !thumbnail && (
                     <div className="relative group w-full h-40 rounded-xl overflow-hidden mb-4 border border-white/10">
-                      <img src={existingCoverImage} className="w-full h-full object-cover" alt="" />
+                      {isVideo(existingCoverImage) ? (
+                        <video src={existingCoverImage} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                      ) : (
+                        <img src={existingCoverImage} className="w-full h-full object-cover" alt="" />
+                      )}
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <label className="cursor-pointer bg-[#48ABBF] text-[#051C30] px-4 py-2 rounded-lg font-bold text-sm">
-                           Change Photo
-                           <input type="file" className="hidden" accept="image/*" onChange={handleThumbnailChange} />
+                           Change Asset
+                           <input type="file" className="hidden" accept="image/*,video/*" onChange={handleThumbnailChange} />
                          </label>
                       </div>
                     </div>
@@ -310,11 +320,11 @@ export default function AdminDashboard() {
                       border-2 border-dashed rounded-2xl cursor-pointer transition-all
                       ${thumbnail ? 'border-[#48ABBF] bg-[#48ABBF]/5' : 'border-white/10 hover:border-white/20 hover:bg-white/5'}
                     `}>
-                      <input type="file" className="hidden" accept="image/webp,image/jpeg" onChange={handleThumbnailChange} />
+                      <input type="file" className="hidden" accept="image/*,video/*" onChange={handleThumbnailChange} />
                       {thumbnail ? (
                         <span className="text-sm text-[#48ABBF] font-medium">{thumbnail.name}</span>
                       ) : (
-                        <span className="text-sm text-white/40">Select cover image</span>
+                        <span className="text-sm text-white/40">Select cover asset (Image/Video)</span>
                       )}
                     </label>
                   )}
@@ -328,7 +338,7 @@ export default function AdminDashboard() {
                   <label className="cursor-pointer text-[#48ABBF] hover:text-white transition-colors text-xs font-bold flex items-center gap-2">
                     <PlusCircle size={14} />
                     Add More
-                    <input type="file" multiple className="hidden" accept="image/*" onChange={handleGalleryChange} />
+                    <input type="file" multiple className="hidden" accept="image/*,video/*" onChange={handleGalleryChange} />
                   </label>
                 </div>
 
@@ -337,7 +347,11 @@ export default function AdminDashboard() {
                   {/* Existing Images */}
                   {existingGallery.map((url, i) => (
                     <div key={`exist-${i}`} className="relative aspect-square rounded-lg overflow-hidden group border border-white/5">
-                      <img src={url} className="w-full h-full object-cover" alt="" />
+                      {isVideo(url) ? (
+                        <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                      ) : (
+                        <img src={url} className="w-full h-full object-cover" alt="" />
+                      )}
                       <button 
                         type="button"
                         onClick={() => removeExistingImage(url)}
@@ -349,23 +363,27 @@ export default function AdminDashboard() {
                   ))}
                   
                   {/* New (Unuploaded) Images */}
-                  {gallery.map((file, i) => (
-                    <div key={`new-${i}`} className="relative aspect-square rounded-lg overflow-hidden group border border-[#48ABBF]/30 bg-[#48ABBF]/5">
-                      <div className="w-full h-full flex items-center justify-center text-[10px] text-center p-2 text-[#48ABBF]/60 break-all leading-tight">
-                        {file.name}
+                  {gallery.map((file, i) => {
+                    const isVid = file.type.startsWith('video/');
+                    return (
+                      <div key={`new-${i}`} className="relative aspect-square rounded-lg overflow-hidden group border border-[#48ABBF]/30 bg-[#48ABBF]/5">
+                        <div className="w-full h-full flex items-center justify-center text-[10px] text-center p-2 text-[#48ABBF]/60 break-all leading-tight">
+                          {file.name}
+                        </div>
+                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-1">
+                          <span className="bg-[#48ABBF] text-[#051C30] text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
+                          {isVid && <span className="bg-purple-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Video</span>}
+                        </div>
+                        <button 
+                          type="button"
+                          onClick={() => removeNewImage(i)}
+                          className="absolute top-1 right-1 p-1 bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <X size={12} />
+                        </button>
                       </div>
-                      <div className="absolute inset-0 bg-black/20 flex items-center justify-center">
-                        <span className="bg-[#48ABBF] text-[#051C30] text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => removeNewImage(i)}
-                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
+                    );
+                  })}
 
                   {existingGallery.length === 0 && gallery.length === 0 && (
                     <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-2xl text-white/20">
@@ -433,12 +451,16 @@ export default function AdminDashboard() {
               existingItems.map(item => (
                 <div key={item.id} className="group bg-[#0F314D]/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col hover:border-[#48ABBF]/30 transition-all duration-300">
                   <div className="relative h-48">
-                    <img src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" alt="" />
+                    {isVideo(item.coverImage) ? (
+                      <video src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
+                    ) : (
+                      <img src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" alt="" />
+                    )}
                     <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                       <button onClick={() => handleEdit(item)} className="p-2.5 bg-black/60 hover:bg-[#48ABBF] hover:text-black rounded-xl backdrop-blur-md transition-all shadow-xl">
                         <Edit size={18} />
                       </button>
-                      <button onClick={() => handleDelete(item.id)} className="p-2.5 bg-black/60 hover:bg-red-500 rounded-xl backdrop-blur-md transition-all shadow-xl">
+                      <button onClick={() => handleDelete(item)} className="p-2.5 bg-black/60 hover:bg-red-500 rounded-xl backdrop-blur-md transition-all shadow-xl">
                         <Trash2 size={18} />
                       </button>
                     </div>

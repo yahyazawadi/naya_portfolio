@@ -45,8 +45,10 @@ export default function PortfolioPrefetcher() {
 
         const urlList = Array.from(urls);
 
-        // 5. Prefetch images in small chunks to avoid network congestion
+        // 5. Prefetch assets in small chunks to avoid network congestion
         const chunkSize = 4;
+        const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+        
         for (let i = 0; i < urlList.length; i += chunkSize) {
           if (isCancelled) break;
           
@@ -54,10 +56,19 @@ export default function PortfolioPrefetcher() {
           await Promise.all(
             chunk.map((url) => {
               return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = resolve;
-                img.onerror = resolve; // Move on even if one fails
-                img.src = url;
+                const isVideo = videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
+                if (isVideo) {
+                  const vid = document.createElement('video');
+                  vid.onloadedmetadata = resolve;
+                  vid.onerror = resolve;
+                  vid.src = url;
+                  vid.preload = 'auto';
+                } else {
+                  const img = new Image();
+                  img.onload = resolve;
+                  img.onerror = resolve; // Move on even if one fails
+                  img.src = url;
+                }
               });
             })
           );

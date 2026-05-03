@@ -118,7 +118,7 @@ export default function RootLayout({
                   }, false);
 
                   document.addEventListener('dragstart', function(e) {
-                    if (e.target.tagName === 'IMG') e.preventDefault();
+                    if (e.target.tagName === 'IMG' || e.target.tagName === 'VIDEO') e.preventDefault();
                   }, false);
                 } catch (e) {}
               })();

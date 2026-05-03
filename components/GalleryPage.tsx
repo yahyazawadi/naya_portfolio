@@ -19,22 +19,41 @@ interface GalleryPageProps {
   groups: ArtGroup[];
 }
 
-function ImageWithFade({ src, alt, className }: { src: string, alt: string, className?: string }) {
+// ─── Utility ──────────────────────────────────────────────────────────────────
+const isVideo = (src: string) => {
+  const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
+  return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
+};
+
+function AssetWithFade({ src, alt, className }: { src: string, alt: string, className?: string }) {
   const [isLoaded, setIsLoaded] = useState(false);
+  const video = isVideo(src);
 
   return (
     <div className="relative w-full h-full bg-white/5 rounded-sm overflow-hidden">
-      <img
-        src={src}
-        alt={alt}
-        onLoad={() => setIsLoaded(true)}
-        className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-        ref={(img) => {
-          if (img?.complete && !isLoaded) {
-            setIsLoaded(true);
-          }
-        }}
-      />
+      {video ? (
+        <video
+          src={src}
+          onLoadedData={() => setIsLoaded(true)}
+          className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          autoPlay
+          loop
+          muted
+          playsInline
+        />
+      ) : (
+        <img
+          src={src}
+          alt={alt}
+          onLoad={() => setIsLoaded(true)}
+          className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+          ref={(img) => {
+            if (img?.complete && !isLoaded) {
+              setIsLoaded(true);
+            }
+          }}
+        />
+      )}
       {!isLoaded && (
         <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent -translate-x-full animate-[shimmer_2s_infinite] pointer-events-none" />
       )}
@@ -75,7 +94,7 @@ function GroupCard({
       onClick={onSelect}
     >
       <div className="relative overflow-hidden group-hover/img:scale-[1.04] transition-transform duration-500">
-        <ImageWithFade 
+        <AssetWithFade 
           src={group.coverImage} 
           alt={group.title} 
           className="w-full h-[260px] md:h-[340px] lg:h-[380px] object-cover" 
@@ -178,16 +197,27 @@ function Lightbox({
         <ChevronRight size={24} className="md:w-8 md:h-8" />
       </button>
 
-      {/* Main Image Container */}
+      {/* Main Asset Container */}
       <div 
         className="relative w-full h-full flex flex-col items-center justify-center pointer-events-none" 
         onClick={(e) => e.stopPropagation()}
       >
-        <img 
-          src={images[currentIndex]} 
-          alt="" 
-          className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
-        />
+        {isVideo(images[currentIndex]) ? (
+          <video 
+            src={images[currentIndex]} 
+            className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
+            controls
+            autoPlay
+            playsInline
+            onClick={(e) => e.stopPropagation()}
+          />
+        ) : (
+          <img 
+            src={images[currentIndex]} 
+            alt="" 
+            className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
+          />
+        )}
         <div className="absolute bottom-12 md:bottom-24 left-1/2 -translate-x-1/2 text-white/50 text-sm md:text-lg font-medium tracking-[0.3em] uppercase">
           {currentIndex + 1} / {images.length}
         </div>
@@ -217,7 +247,7 @@ function GroupDetailView({
             className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm scroll-mt-24"
             onClick={() => onImageClick(i)}
           >
-            <ImageWithFade 
+            <AssetWithFade 
               src={src} 
               alt={`${group.title} ${i + 1}`} 
               className="w-full h-auto object-cover group-hover/tile:scale-[1.03] duration-500" 

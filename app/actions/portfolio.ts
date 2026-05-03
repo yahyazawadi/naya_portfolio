@@ -14,7 +14,11 @@ interface PortfolioGroupData {
 
 export async function savePortfolioGroup(data: PortfolioGroupData) {
   try {
-    const db = getRequestContext().env.DB;
+    const context = getRequestContext();
+    const db = context?.env?.DB || (process.env as any).DB;
+    
+    if (!db) throw new Error("D1 Database binding 'DB' not found");
+    
     const imagesJson = JSON.stringify(data.images);
 
     await db.prepare(
@@ -24,17 +28,22 @@ export async function savePortfolioGroup(data: PortfolioGroupData) {
     .bind(data.category, data.title, data.description, data.coverImage, imagesJson)
     .run();
     
+    console.log(`[Portfolio Action] Saved new group: ${data.title} in ${data.category}`);
     revalidatePath('/');
+    revalidatePath(`/${data.category}`);
     return { success: true };
   } catch (err: any) {
-    console.error("D1 Save Error:", err);
+    console.error("[Portfolio Action] Save Error:", err);
     return { error: `Database failure: ${err.message}` };
   }
 }
 
 export async function updatePortfolioGroup(id: number, data: Partial<PortfolioGroupData>) {
   try {
-    const db = getRequestContext().env.DB;
+    const context = getRequestContext();
+    const db = context?.env?.DB || (process.env as any).DB;
+    
+    if (!db) throw new Error("D1 Database binding 'DB' not found");
     
     const sets: string[] = [];
     const values: any[] = [];
@@ -54,29 +63,45 @@ export async function updatePortfolioGroup(id: number, data: Partial<PortfolioGr
     .bind(...values)
     .run();
 
+    console.log(`[Portfolio Action] Updated group ${id}`);
     revalidatePath('/');
+    if (data.category) revalidatePath(`/${data.category}`);
     return { success: true };
   } catch (err: any) {
-    console.error("D1 Update Error:", err);
+    console.error("[Portfolio Action] Update Error:", err);
     return { error: err.message };
   }
 }
 
-export async function deletePortfolioGroup(id: number) {
+export async function deletePortfolioGroup(id: number, category?: string) {
   try {
-    const db = getRequestContext().env.DB;
+    const context = getRequestContext();
+    const db = context?.env?.DB || (process.env as any).DB;
+    
+    if (!db) throw new Error("D1 Database binding 'DB' not found");
+
     await db.prepare("DELETE FROM portfolio_groups WHERE id = ?").bind(id).run();
+    
+    console.log(`[Portfolio Action] Deleted group ${id}`);
     revalidatePath('/');
+    if (category) revalidatePath(`/${category}`);
     return { success: true };
   } catch (err: any) {
-    console.error("D1 Delete Error:", err);
+    console.error("[Portfolio Action] Delete Error:", err);
     return { error: err.message };
   }
 }
 
 export async function getPortfolioGroups(category: string) {
   try {
-    const db = getRequestContext().env.DB;
+    const context = getRequestContext();
+    const db = context?.env?.DB || (process.env as any).DB;
+    
+    if (!db) {
+      console.warn("D1 Database binding 'DB' not found during fetch");
+      return [];
+    }
+
     const { results } = await db.prepare(
       "SELECT * FROM portfolio_groups WHERE category = ? ORDER BY display_order ASC, created_at DESC"
     )
@@ -89,14 +114,21 @@ export async function getPortfolioGroups(category: string) {
       coverImage: row.cover_image,
     }));
   } catch (err) {
-    console.error("D1 Fetch Error:", err);
+    console.error("[Portfolio Action] Fetch Error:", err);
     return [];
   }
 }
 
 export async function getAllPortfolioGroups() {
   try {
-    const db = getRequestContext().env.DB;
+    const context = getRequestContext();
+    const db = context?.env?.DB || (process.env as any).DB;
+    
+    if (!db) {
+      console.warn("D1 Database binding 'DB' not found during fetch all");
+      return [];
+    }
+
     const { results } = await db.prepare(
       "SELECT * FROM portfolio_groups ORDER BY created_at DESC"
     )
@@ -108,7 +140,7 @@ export async function getAllPortfolioGroups() {
       coverImage: row.cover_image,
     }));
   } catch (err) {
-    console.error("D1 Fetch All Error:", err);
+    console.error("[Portfolio Action] Fetch All Error:", err);
     return [];
   }
 }

@@ -35,12 +35,12 @@ export default function Footer({ hideStrips = false }: FooterProps) {
           <div className="relative z-10 w-full md:w-[45%]">
             <h2 className="text-white text-[28px] md:text-[36px] lg:text-[48px] font-bold leading-[1.05] tracking-tight">
               Hi, I&apos;m{" "}
-              <span className="font-accent text-[1.4em] text-[#3FE2FF] leading-none inline-block transform translate-y-3">
+              <span className="font-accent text-[1.0em] text-[#3FE2FF] leading-none inline-block">
                 Naya
               </span>
               ! I&apos;m a digital &amp; traditional <br className="md:hidden" /> artist,
               <br className="hidden md:block" />
-              illustrator, graphic designer and <br className="md:hidden" /> animator
+              illustrator, graphic designer & <br className="md:hidden" /> animator
               <br />
               based in Damascus-Syria.
             </h2>

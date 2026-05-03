@@ -1,1 +1,0 @@
-this is naya website

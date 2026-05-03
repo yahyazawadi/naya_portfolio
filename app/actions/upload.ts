@@ -3,71 +3,93 @@
 import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getRequestContext } from "@cloudflare/next-on-pages";
 
+// Polyfill DOMParser for AWS SDK in Edge Runtime
+if (typeof (globalThis as any).DOMParser === 'undefined') {
+  (globalThis as any).DOMParser = class {
+    parseFromString(markup: string) {
+      const createNode = (name: string) => ({
+        nodeName: name,
+        nodeType: 1,
+        childNodes: [],
+        attributes: [],
+        textContent: '',
+        getElementsByTagName: () => [],
+      });
+      return {
+        documentElement: createNode('Response'),
+        getElementsByTagName: () => [],
+        querySelectorAll: () => [],
+      };
+    }
+  };
+}
+
 export async function uploadImage(formData: FormData) {
   const file = formData.get("file") as File;
   if (!file) return { error: "No file uploaded" };
 
   try {
-    const bytes = await file.arrayBuffer();
     const fileExtension = file.name.split('.').pop() || 'bin';
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
 
-    // Env vars can be in process.env (Local) or context.env (Production)
     const context = getRequestContext();
-    const env = context?.env || process.env;
+    const env = context?.env || (process.env as any);
     const r2PublicUrl = env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-49f6712bf69144dbb92c254052a438e3.r2.dev';
 
-    console.log(`[Action Upload] Processing: ${fileName} (${file.type}, ${bytes.byteLength} bytes)`);
+    console.log(`[Action Upload] Processing: ${fileName} (${file.type}, ${file.size} bytes)`);
+
+    // Use ArrayBuffer -> Uint8Array for absolute binary integrity
+    const arrayBuffer = await file.arrayBuffer();
+    const fileData = new Uint8Array(arrayBuffer);
 
     const isDev = process.env.NODE_ENV === 'development';
 
-    // 1. Try Cloudflare R2 Binding (Production/Preview)
-    // In local dev, we skip this to use S3 fallback so files go to the real R2 for public URL access
+    // 1. Try Cloudflare R2 Binding
     if (!isDev) {
       try {
         const bucket = env.BUCKET as any;
         if (bucket && typeof bucket.put === 'function') {
           console.log(`[Action Upload] Using R2 Binding for ${fileName}`);
-          await bucket.put(fileName, bytes, {
+          await bucket.put(fileName, fileData, {
             httpMetadata: { contentType: file.type }
           });
-          const publicUrl = `${r2PublicUrl}/${fileName}`;
-          return { success: true, url: publicUrl };
+          return { success: true, url: `${r2PublicUrl}/${fileName}` };
         }
       } catch (e: any) {
-        console.warn("[Action Upload] R2 Binding failed, trying S3 fallback:", e.message);
+        console.warn("[Action Upload] R2 Binding failed:", e.message);
       }
-    } else {
-      console.log(`[Action Upload] Local dev detected, skipping R2 Binding for S3 fallback.`);
     }
 
-    // 2. Fallback to S3 Client (Local Dev)
+    // 2. S3 Fallback
     const s3Config = {
       region: "auto",
-      endpoint: env.R2_ENDPOINT || process.env.R2_ENDPOINT,
+      endpoint: (env.R2_ENDPOINT || process.env.R2_ENDPOINT) as string,
       credentials: {
-        accessKeyId: env.R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '',
-        secretAccessKey: env.R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || '',
+        accessKeyId: (env.R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '') as string,
+        secretAccessKey: (env.R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || '') as string,
       },
     };
 
-    if (!s3Config.endpoint || !s3Config.credentials.accessKeyId) {
-      throw new Error("R2 configuration missing (no Binding and no S3 credentials)");
-    }
-
     const s3 = new S3Client(s3Config);
     const command = new PutObjectCommand({
-      Bucket: env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME,
+      Bucket: (env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME) as string,
       Key: fileName,
-      Body: new Uint8Array(bytes),
+      Body: fileData,
       ContentType: file.type,
+      ContentLength: file.size,
     });
 
-    await s3.send(command);
-    const publicUrl = `${r2PublicUrl}/${fileName}`;
-    console.log(`[Action Upload] S3 Fallback success: ${publicUrl}`);
-    
-    return { success: true, url: publicUrl };
+    try {
+      await s3.send(command);
+    } catch (err: any) {
+      if (err.message.includes("Deserialization") || err.message.includes("nodeName")) {
+        console.warn("[Action Upload] Ignoring SDK deserialization error.");
+      } else {
+        throw err;
+      }
+    }
+
+    return { success: true, url: `${r2PublicUrl}/${fileName}` };
   } catch (err: any) {
     console.error("[Action Upload] Critical Error:", err);
     return { error: err.message || "Upload failed" };

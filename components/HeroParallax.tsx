@@ -50,19 +50,20 @@ export default function HeroParallax() {
 
   if (!isDesktop) return null;
 
-  // Physical Wheel Triggers
+  // Triggers
   const HALF_WHEEL = 100; 
   const FULL_ROTATION = 300; 
 
   const totalScrollHeight = winHeight * 8; 
-  const isPastHero = smoothScroll > totalScrollHeight + 200;
+  const isPastHero = smoothScroll > totalScrollHeight + 500;
   
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   
-  // Cloud Reveal: Anchored to bottom edge, slides up
-  const cloudProgress = Math.min(Math.max((smoothScroll - HALF_WHEEL) / 600, 0), 1);
+  // Continuous Cloud Velocity (Never stops, never zooms)
+  const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
+  const cloudOpacity = Math.min(cloudActiveScroll / 400, 1);
   
-  // Naya Reveal: Anchored to bottom edge, slides up
+  // Naya Reveal
   const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 600, 0), 1);
 
   return (
@@ -76,7 +77,7 @@ export default function HeroParallax() {
         }}
       >
         
-        {/* 1. CITY SKYLINE */}
+        {/* 1. CITY SKYLINE (Zooming Scene) */}
         <div className="absolute inset-0 w-full h-full z-10">
           {layers.map((layer) => (
             <div
@@ -84,7 +85,7 @@ export default function HeroParallax() {
               className="absolute inset-0 w-full h-full"
               style={{
                 zIndex: layer.z,
-                transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.12})`,
+                transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.15})`,
               }}
             >
               <img
@@ -97,18 +98,19 @@ export default function HeroParallax() {
         </div>
 
         {/* 
-            2. CLOUD LAYER (BOTTOM-ANCHORED)
-            - top-full puts the container base at the screen's bottom.
-            - translateY moves it UP from that baseline.
+            2. CLOUD LAYER (NO ZOOM, CONTINUOUS ASCENT)
+            - Explicit scale(1) to prevent any zoom effect.
+            - Continuous translateY so they "go all up" and exit the top.
         */}
         <div 
-          className="absolute top-full left-0 w-full z-30"
+          className="absolute top-full left-0 w-full z-30 flex flex-col items-center"
           style={{ 
-            transform: `translateY(-${cloudProgress * 110}vh)`,
-            opacity: cloudProgress
+            // Rising steadily at 2px per scroll pixel (no cap)
+            transform: `translateY(-${cloudActiveScroll * 2.0}px) scale(1)`,
+            opacity: cloudOpacity
           }}
         >
-          <div className="flex flex-col items-center">
+          <div className="w-full flex flex-col items-center">
             <Image
               src="/images/cloud_up.webp"
               alt=""
@@ -136,11 +138,11 @@ export default function HeroParallax() {
           </div>
         </div>
 
-        {/* 3. NAYA & CIRCLES (BOTTOM-ANCHORED) */}
+        {/* 3. NAYA & CIRCLES */}
         <div 
-          className="absolute top-full left-0 w-full h-full z-40 flex items-center justify-center pt-[10vw]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-[10vw]"
           style={{ 
-            transform: `translateY(-${nayaProgress * 100}vh)`,
+            transform: `translateY(${(1 - nayaProgress) * 100}vh) scale(${1 + globalProgress * 0.1})`,
             opacity: nayaProgress
           }}
         >
@@ -151,9 +153,6 @@ export default function HeroParallax() {
             height={562}
             priority
             className="absolute w-[120%] max-w-none h-auto opacity-30"
-            style={{
-              transform: `scale(${1 + globalProgress * 0.15})`,
-            }}
           />
           <Image
             src="/images/nayaherself.webp"
@@ -163,7 +162,7 @@ export default function HeroParallax() {
             priority
             className="relative w-[55%] max-w-[800px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.8)]"
             style={{
-              transform: `translateY(${globalProgress * -150}px) scale(${1 + globalProgress * 0.15})`,
+              transform: `translateY(${globalProgress * -150}px)`,
             }}
           />
         </div>

@@ -33,7 +33,7 @@ export default function HeroParallax() {
     const animate = () => {
       setSmoothScroll((prev) => {
         const diff = scrollYRef.current - prev;
-        return prev + diff * 0.07;
+        return prev + diff * 0.08;
       });
       requestRef.current = requestAnimationFrame(animate);
     };
@@ -50,58 +50,64 @@ export default function HeroParallax() {
 
   if (!isDesktop) return null;
 
-  const totalScroll = winHeight * 7.5; 
-  const isPastHero = smoothScroll > totalScroll + (winHeight * 0.5);
-  const scrollProgress = Math.min(Math.max(smoothScroll / totalScroll, 0), 1);
+  // Physical Wheel Triggers
+  const HALF_WHEEL = 100; 
+  const FULL_ROTATION = 300; 
+
+  const totalScrollHeight = winHeight * 8; 
+  const isPastHero = smoothScroll > totalScrollHeight + 200;
   
-  // Reveal happens between 35% and 75% of the scroll
-  const revealProgress = Math.min(Math.max((scrollProgress - 0.35) / 0.4, 0), 1);
+  const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
+  const cloudProgress = Math.min(Math.max((smoothScroll - HALF_WHEEL) / 400, 0), 1);
+  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 500, 0), 1);
 
   return (
     <div className="relative w-full h-[800vh] bg-[#0B1D32]">
       
       {/* 
-          Using FIXED positioning instead of sticky. 
-          This is immune to Body Zoom / Overflow issues.
+          Using 'fixed inset-0' to force anchoring to the true viewport edges.
+          This bypasses zoom-induced height miscalculations.
       */}
       <div 
-        className="fixed top-0 left-0 w-full h-full bg-[#0B1D32] overflow-hidden pointer-events-none"
+        className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
         style={{ 
           display: isPastHero ? 'none' : 'block',
           zIndex: 0
         }}
       >
         
-        {/* SECTION 1: City Skyline */}
-        <div className="absolute inset-0 w-full h-full">
+        {/* 
+            1. CITY SKYLINE 
+            - object-top pins the towers to the top edge.
+            - scale starts at 1.0 (no crop).
+        */}
+        <div className="absolute inset-0 w-full h-full z-10">
           {layers.map((layer) => (
             <div
               key={layer.src}
               className="absolute inset-0 w-full h-full"
               style={{
                 zIndex: layer.z,
-                transform: `translateY(${scrollProgress * layer.speed * 400}px) scale(${1 + scrollProgress * 0.06})`,
+                transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.1})`,
               }}
             >
               <img
                 src={layer.src}
                 alt=""
-                className="w-full h-full object-cover object-bottom"
+                className="w-full h-full object-cover object-top"
               />
             </div>
           ))}
         </div>
 
-        {/* SECTION 2: Reveal Section (150vh offset to guarantee it's off-screen despite zoom) */}
+        {/* 2. CLOUD LAYER (Duplicate for depth) */}
         <div 
-          className="absolute inset-0 z-50 flex flex-col items-center justify-center"
+          className="absolute inset-0 z-30 flex flex-col items-center justify-end"
           style={{ 
-            // 150vh creates a buffer for the 75% body zoom
-            transform: `translateY(${(1 - revealProgress) * 150}vh)`,
-            opacity: revealProgress > 0 ? 1 : 0
+            transform: `translateY(${(1 - cloudProgress) * 150}vh)`,
+            opacity: cloudProgress > 0 ? 1 : 0
           }}
         >
-          {/* Cloud Curtain */}
           <div className="relative w-full">
             <Image
               src="/images/cloud_up.webp"
@@ -112,6 +118,14 @@ export default function HeroParallax() {
               className="w-full h-auto"
             />
             <Image
+              src="/images/cloud_up.webp"
+              alt=""
+              width={1920}
+              height={1080}
+              priority
+              className="w-full h-auto -mt-[25vw] opacity-90"
+            />
+             <Image
               src="/images/cloud_down.webp"
               alt=""
               width={1920}
@@ -120,32 +134,38 @@ export default function HeroParallax() {
               className="w-full h-auto -mt-[15vw]"
             />
           </div>
+        </div>
 
-          {/* Character & Vectors (No rotation as requested) */}
-          <div className="absolute inset-0 flex items-center justify-center pt-[5vw]">
-             <Image
-              src="/vectors/mainpagebackgroundcirclescopy.png"
-              alt=""
-              width={1865}
-              height={562}
-              priority
-              className="absolute w-[120%] max-w-none h-auto opacity-30"
-              style={{
-                transform: `scale(${1 + scrollProgress * 0.1})`,
-              }}
-            />
-            <Image
-              src="/images/nayaherself.webp"
-              alt="Naya"
-              width={1200}
-              height={1697}
-              priority
-              className="relative w-[55%] max-w-[800px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.7)]"
-              style={{
-                transform: `translateY(${scrollProgress * -100}px) scale(${1 + scrollProgress * 0.1})`,
-              }}
-            />
-          </div>
+        {/* 3. NAYA & CIRCLES */}
+        <div 
+          className="absolute inset-0 z-40 flex items-center justify-center pt-[10vw]"
+          style={{ 
+            transform: `translateY(${(1 - nayaProgress) * 80}vh)`,
+            opacity: nayaProgress
+          }}
+        >
+           <Image
+            src="/vectors/mainpagebackgroundcirclescopy.png"
+            alt=""
+            width={1865}
+            height={562}
+            priority
+            className="absolute w-[120%] max-w-none h-auto opacity-30"
+            style={{
+              transform: `scale(${1 + globalProgress * 0.15})`,
+            }}
+          />
+          <Image
+            src="/images/nayaherself.webp"
+            alt="Naya"
+            width={1200}
+            height={1697}
+            priority
+            className="relative w-[55%] max-w-[800px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.8)]"
+            style={{
+              transform: `translateY(${globalProgress * -150}px) scale(${1 + globalProgress * 0.15})`,
+            }}
+          />
         </div>
 
       </div>

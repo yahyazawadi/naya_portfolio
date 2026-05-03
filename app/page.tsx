@@ -56,7 +56,7 @@ export default function Home() {
         <div className="relative w-full overflow-hidden z-0">
           <div className="relative w-[130%] md:w-[110%] -left-[15%] md:-left-[5%]">
             <img
-              src="/images/city.webp"
+              src="/images/city1.webp"
               alt="City Background"
               className="w-full h-auto block object-cover"
             />

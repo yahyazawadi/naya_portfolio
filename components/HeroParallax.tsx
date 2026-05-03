@@ -58,16 +58,16 @@ export default function HeroParallax() {
   const isPastHero = smoothScroll > totalScrollHeight + 200;
   
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
-  const cloudProgress = Math.min(Math.max((smoothScroll - HALF_WHEEL) / 400, 0), 1);
-  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 500, 0), 1);
+  
+  // Cloud Reveal: Anchored to bottom edge, slides up
+  const cloudProgress = Math.min(Math.max((smoothScroll - HALF_WHEEL) / 600, 0), 1);
+  
+  // Naya Reveal: Anchored to bottom edge, slides up
+  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 600, 0), 1);
 
   return (
     <div className="relative w-full h-[800vh] bg-[#0B1D32]">
       
-      {/* 
-          Using 'fixed inset-0' to force anchoring to the true viewport edges.
-          This bypasses zoom-induced height miscalculations.
-      */}
       <div 
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
         style={{ 
@@ -76,11 +76,7 @@ export default function HeroParallax() {
         }}
       >
         
-        {/* 
-            1. CITY SKYLINE 
-            - object-top pins the towers to the top edge.
-            - scale starts at 1.0 (no crop).
-        */}
+        {/* 1. CITY SKYLINE */}
         <div className="absolute inset-0 w-full h-full z-10">
           {layers.map((layer) => (
             <div
@@ -88,7 +84,7 @@ export default function HeroParallax() {
               className="absolute inset-0 w-full h-full"
               style={{
                 zIndex: layer.z,
-                transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.1})`,
+                transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.12})`,
               }}
             >
               <img
@@ -100,15 +96,19 @@ export default function HeroParallax() {
           ))}
         </div>
 
-        {/* 2. CLOUD LAYER (Duplicate for depth) */}
+        {/* 
+            2. CLOUD LAYER (BOTTOM-ANCHORED)
+            - top-full puts the container base at the screen's bottom.
+            - translateY moves it UP from that baseline.
+        */}
         <div 
-          className="absolute inset-0 z-30 flex flex-col items-center justify-end"
+          className="absolute top-full left-0 w-full z-30"
           style={{ 
-            transform: `translateY(${(1 - cloudProgress) * 150}vh)`,
-            opacity: cloudProgress > 0 ? 1 : 0
+            transform: `translateY(-${cloudProgress * 110}vh)`,
+            opacity: cloudProgress
           }}
         >
-          <div className="relative w-full">
+          <div className="flex flex-col items-center">
             <Image
               src="/images/cloud_up.webp"
               alt=""
@@ -136,11 +136,11 @@ export default function HeroParallax() {
           </div>
         </div>
 
-        {/* 3. NAYA & CIRCLES */}
+        {/* 3. NAYA & CIRCLES (BOTTOM-ANCHORED) */}
         <div 
-          className="absolute inset-0 z-40 flex items-center justify-center pt-[10vw]"
+          className="absolute top-full left-0 w-full h-full z-40 flex items-center justify-center pt-[10vw]"
           style={{ 
-            transform: `translateY(${(1 - nayaProgress) * 80}vh)`,
+            transform: `translateY(-${nayaProgress * 100}vh)`,
             opacity: nayaProgress
           }}
         >

@@ -101,6 +101,25 @@ export default function RootLayout({
                   }
                   document.documentElement.style.overflowX = "hidden";
                   document.body.style.overflowX = "hidden";
+
+                  // ── Image & Site Protection ──
+                  // Treat right-click as a left-click
+                  document.addEventListener('contextmenu', function(e) {
+                    e.preventDefault();
+                    // Dispatch a fake click event to the target
+                    var clickEvent = new MouseEvent('click', {
+                      view: window,
+                      bubbles: true,
+                      cancelable: true,
+                      clientX: e.clientX,
+                      clientY: e.clientY
+                    });
+                    e.target.dispatchEvent(clickEvent);
+                  }, false);
+
+                  document.addEventListener('dragstart', function(e) {
+                    if (e.target.tagName === 'IMG') e.preventDefault();
+                  }, false);
                 } catch (e) {}
               })();
             `,

@@ -15,7 +15,7 @@ const glareLayers = [
   { left: '5%', top: '2%', scale: 0.9, opacity: 0.5 },
   { left: '35%', top: '12%', scale: 0.9, opacity: 0.3 },
   { left: '65%', top: '8%', scale: 0.5, opacity: 0.6 },
-  { left: '80%', top: '22%', scale: 1.1, opacity: 0.4 },
+  { left: '80%', top: '22%', scale: 0.2, opacity: 0.4 },
   // { left: '15%', top: '18%', scale: 1.2, opacity: 0.4 },
   // { left: '45%', top: '5%', scale: 1.5, opacity: 0.5 },
   // { left: '25%', top: '25%', scale: 1.0, opacity: 0.3 },
@@ -24,7 +24,13 @@ const glareLayers = [
   { left: '20%', top: '45%', scale: 1.1, opacity: 0.3 },
   { left: '50%', top: '60%', scale: 1.4, opacity: 0.4 },
   { left: '75%', top: '40%', scale: 0.9, opacity: 0.5 },
-  { left: '10%', top: '55%', scale: 1.2, opacity: 0.3 },
+  { left: '10%', top: '55%', scale: 0.3, opacity: 0.3 },
+  // Bottom flare layers for high-density fly-through
+  { left: '-10%', top: '110%', scale: 0.9, opacity: 0.4 },
+  { left: '-10%', top: '125%', scale: 0.9, opacity: 0.5 },
+  { left: '-20%', top: '100%', scale: 0.7, opacity: 0.3 },
+  { left: '40%', top: '140%', scale: 0.8, opacity: 0.5 },
+  { left: '60%', top: '115%', scale: 0.9, opacity: 0.4 },
 ];
 
 export default function HeroParallax() {
@@ -71,8 +77,8 @@ export default function HeroParallax() {
   const HALF_WHEEL = 250; // Delay cloud start slightly to wait for scroll momentum
   const FULL_ROTATION = 400; // Start Naya reveal sooner
 
-  const totalScrollHeight = winHeight * 1.9; 
-  const isPastHero = smoothScroll > totalScrollHeight + 250; 
+  const totalScrollHeight = winHeight * 1.9;
+  const isPastHero = smoothScroll > totalScrollHeight + 250;
 
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
@@ -81,10 +87,10 @@ export default function HeroParallax() {
 
   // Dense cloud reveal: 4 high-density layers
   const cloudGroups = [
-    { count: 3, margin: "-mt-[25vw]" }, 
+    { count: 3, margin: "-mt-[25vw]" },
     { count: 4, margin: "-mt-[35vw]" },
-    { count: 4, margin: "-mt-[40vw]" }, 
-    { count: 4, margin: "-mt-[45vw]" }, 
+    { count: 4, margin: "-mt-[40vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
   ];
 
   // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
@@ -116,7 +122,7 @@ export default function HeroParallax() {
                 zIndex: 25,
                 width: '65vw',
                 // Constant fast velocity, but takes longer to be covered by clouds
-                transform: `translateY(${globalProgress * -5000}px) scale(${glare.scale})`,
+                transform: `translateY(${globalProgress * -8000}px) scale(${glare.scale})`,
                 opacity: 1.0
               }}
             >

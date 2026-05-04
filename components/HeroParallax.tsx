@@ -10,6 +10,14 @@ const layers = [
   { src: "/images/city4.webp", speed: -0.4, z: 23 },
 ];
 
+// Configuration for sky lens flares/glares
+const glareLayers = [
+  { left: '5%', top: '2%', scale: 1.4, opacity: 0.5 },
+  { left: '35%', top: '12%', scale: 0.9, opacity: 0.3 },
+  { left: '65%', top: '8%', scale: 1.8, opacity: 0.6 },
+  { left: '80%', top: '22%', scale: 1.1, opacity: 0.4 },
+];
+
 export default function HeroParallax() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [smoothScroll, setSmoothScroll] = useState(0);
@@ -73,6 +81,10 @@ export default function HeroParallax() {
     { count: 4, margin: "-mt-[60vw]" }, // End
   ];
 
+  // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
+  const nayaStuckThreshold = 800; 
+  const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
+
   return (
     <div className="relative w-full h-[800vh] bg-[#0B1D32]">
       
@@ -84,8 +96,46 @@ export default function HeroParallax() {
         }}
       >
         
-        {/* 1. CITY SKYLINE */}
-        <div className="absolute inset-0 w-full h-full z-10">
+        {/* 1. CITY SKYLINE & LENS FLARES */}
+        <div className="absolute inset-0 w-full h-full z-10" style={{ opacity: 1 - nayaProgress }}>
+          
+          {/* HIGH-SPEED CITY GLARES (Lens Flares) - Now in front of buildings (z-25) */}
+          {glareLayers.map((glare, i) => (
+            <div
+              key={`glare-${i}`}
+              className="absolute pointer-events-none mix-blend-screen"
+              style={{
+                left: glare.left,
+                top: glare.top,
+                zIndex: 25, // In front of city, behind clouds
+                width: '65vw',
+                // Ultra velocity: zip down at extreme speed
+                transform: `translateY(${globalProgress * -5000}px) scale(${glare.scale})`,
+                opacity: 1.0 
+              }}
+            >
+              <Image 
+                src="/images/cityglare5.webp" 
+                alt="" 
+                width={800} 
+                height={800} 
+                priority 
+                className="w-full h-auto" 
+              />
+              {/* Layered Duplicate: Shifted Left & Down */}
+              <div className="absolute inset-0 translate-x-[-8%] translate-y-[8%] opacity-70">
+                <Image 
+                  src="/images/cityglare5.webp" 
+                  alt="" 
+                  width={800} 
+                  height={800} 
+                  priority 
+                  className="w-full h-auto" 
+                />
+              </div>
+            </div>
+          ))}
+
           {layers.map((layer) => (
             <div
               key={layer.src}
@@ -95,11 +145,7 @@ export default function HeroParallax() {
                 transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.15})`,
               }}
             >
-              <img
-                src={layer.src}
-                alt=""
-                className="w-full h-full object-cover object-top"
-              />
+              <img src={layer.src} alt="" className="w-full h-full object-cover object-top" />
             </div>
           ))}
         </div>
@@ -142,14 +188,22 @@ export default function HeroParallax() {
                 )}
               </div>
             ))}
+            
+            {/* 3. TRANSITION BOX - Solid color behind the lowest clouds */}
+            <div 
+              className="w-full h-[800vh] bg-[#051c30] -mt-[60vw]" 
+              style={{ zIndex: -1 }} // Blends behind the cloud stacks
+            />
           </div>
         </div>
 
-        {/* 3. NAYA & CIRCLES */}
+        {/* 4. NAYA & CIRCLES */}
         <div 
           className="absolute inset-0 z-40 flex items-center justify-center pt-[10vw]"
           style={{ 
-            transform: `translateY(${(1 - nayaProgress) * 100}vh) scale(${1 + globalProgress * 0.1})`,
+            // Rise from bottom + Hook onto clouds (stuckOffset * 4.5)
+            // Using two separate translateY calls to avoid calc() unit issues
+            transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
             opacity: nayaProgress
           }}
         >
@@ -159,7 +213,10 @@ export default function HeroParallax() {
             width={1865}
             height={562}
             priority
-            className="absolute w-[120%] max-w-none h-auto opacity-30"
+            className="absolute w-[120%] max-w-none h-auto"
+            style={{ 
+              opacity: 0.3 + (nayaProgress * 0.7) // Ramps from 0.3 to 1.0 at the end
+            }}
           />
           <Image
             src="/images/nayaherself.webp"

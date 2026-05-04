@@ -62,7 +62,8 @@ export default function HeroParallax() {
   const HALF_WHEEL = 100; 
   const FULL_ROTATION = 300; 
 
-  const totalScrollHeight = winHeight * 8; 
+  // Tightened Triggers for a faster transition to the portfolio
+  const totalScrollHeight = winHeight * 3; 
   const isPastHero = smoothScroll > totalScrollHeight + 500;
   
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
@@ -86,7 +87,7 @@ export default function HeroParallax() {
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
   return (
-    <div className="relative w-full h-[800vh] bg-[#0B1D32]">
+    <div className="relative w-full h-[300vh] bg-[#0B1D32]">
       
       <div 
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
@@ -191,7 +192,7 @@ export default function HeroParallax() {
             
             {/* 3. TRANSITION BOX - Solid color behind the lowest clouds */}
             <div 
-              className="w-full h-[800vh] bg-[#051c30] -mt-[60vw]" 
+              className="w-full h-[200vh] bg-[#051c30] -mt-[60vw]" 
               style={{ zIndex: -1 }} // Blends behind the cloud stacks
             />
           </div>

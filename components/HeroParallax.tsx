@@ -12,25 +12,22 @@ const layers = [
 
 // Doubled glare instances for high-density bokeh sky
 const glareLayers = [
-  { left: '5%', top: '2%', scale: 0.9, opacity: 0.5 },
-  { left: '35%', top: '12%', scale: 0.9, opacity: 0.3 },
-  { left: '65%', top: '8%', scale: 0.5, opacity: 0.6 },
-  { left: '80%', top: '22%', scale: 0.2, opacity: 0.4 },
-  // { left: '15%', top: '18%', scale: 1.2, opacity: 0.4 },
-  // { left: '45%', top: '5%', scale: 1.5, opacity: 0.5 },
-  // { left: '25%', top: '25%', scale: 1.0, opacity: 0.3 },
-  // { left: '90%', top: '10%', scale: 1.3, opacity: 0.4 },
-  // Lower flare layers (closer to buildings)
+  // Upper section
+  { left: '10%', top: '5%', scale: 0.9, opacity: 0.5 },
+  { left: '40%', top: '15%', scale: 0.9, opacity: 0.3 },
+  { left: '70%', top: '10%', scale: 0.5, opacity: 0.6 },
+  { left: '90%', top: '25%', scale: 0.2, opacity: 0.4 },
+  // Middle section
   { left: '20%', top: '45%', scale: 1.1, opacity: 0.3 },
-  { left: '50%', top: '60%', scale: 1.4, opacity: 0.4 },
-  { left: '75%', top: '40%', scale: 0.9, opacity: 0.5 },
-  { left: '10%', top: '55%', scale: 0.3, opacity: 0.3 },
-  // Bottom flare layers for high-density fly-through
-  { left: '-10%', top: '110%', scale: 0.9, opacity: 0.4 },
-  { left: '-10%', top: '125%', scale: 0.9, opacity: 0.5 },
-  { left: '-20%', top: '100%', scale: 0.7, opacity: 0.3 },
-  { left: '40%', top: '140%', scale: 0.8, opacity: 0.5 },
-  { left: '60%', top: '115%', scale: 0.9, opacity: 0.4 },
+  { left: '55%', top: '60%', scale: 1.4, opacity: 0.4 },
+  { left: '80%', top: '40%', scale: 0.9, opacity: 0.5 },
+  { left: '5%', top: '55%', scale: 0.3, opacity: 0.3 },
+  // Bottom section (enters during scroll)
+  { left: '-15%', top: '100%', scale: 0.9, opacity: 0.4 },
+  { left: '30%', top: '120%', scale: 0.9, opacity: 0.5 },
+  { left: '60%', top: '110%', scale: 0.7, opacity: 0.3 },
+  { left: '95%', top: '135%', scale: 0.8, opacity: 0.5 },
+  { left: '15%', top: '145%', scale: 0.9, opacity: 0.4 },
 ];
 
 export default function HeroParallax() {

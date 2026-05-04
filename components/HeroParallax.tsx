@@ -67,35 +67,32 @@ export default function HeroParallax() {
 
   if (!isDesktop) return null;
 
-  // TIGHTENED TRIGGERS: Bringing the portfolio content immediately after the clouds
-  const HALF_WHEEL = 300;
-  const FULL_ROTATION = 600;
+  // FINAL SYNCED TRIGGERS: Coordinated for a fast, punchy 4-layer reveal
+  const HALF_WHEEL = 250; // Delay cloud start slightly to wait for scroll momentum
+  const FULL_ROTATION = 400; // Start Naya reveal sooner
 
-  const totalScrollHeight = winHeight * 2.5;
-  const isPastHero = smoothScroll > totalScrollHeight + 500;
+  const totalScrollHeight = winHeight * 1.9; 
+  const isPastHero = smoothScroll > totalScrollHeight + 250; 
 
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
   const cloudOpacity = 0.5 + Math.min(cloudActiveScroll / 300, 0.5);
-  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 300, 0), 1);
+  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 250, 0), 1);
 
-  // Progressive density: Start thin (excellent start) and end extremely thick
+  // Dense cloud reveal: 4 high-density layers
   const cloudGroups = [
-    { count: 2, margin: "-mt-[30vw]" }, // Start
-    { count: 2, margin: "-mt-[35vw]" },
-    { count: 3, margin: "-mt-[40vw]" },
-    { count: 3, margin: "-mt-[45vw]" },
-    { count: 4, margin: "-mt-[50vw]" },
-    { count: 4, margin: "-mt-[55vw]" },
-    { count: 4, margin: "-mt-[60vw]" }, // End
+    { count: 3, margin: "-mt-[25vw]" }, 
+    { count: 4, margin: "-mt-[35vw]" },
+    { count: 4, margin: "-mt-[40vw]" }, 
+    { count: 4, margin: "-mt-[45vw]" }, 
   ];
 
   // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
-  const nayaStuckThreshold = 1000;
+  const nayaStuckThreshold = 650; // Stuck point moved up to match faster cloud arrival
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
   return (
-    <div className="relative w-full h-[300vh] bg-[#0B1D32]">
+    <div className="relative w-full h-[245vh] bg-[#0B1D32]">
 
       <div
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
@@ -191,7 +188,7 @@ export default function HeroParallax() {
             ))}
 
             <div
-              className="w-full h-[100vh] bg-[#051c30] -mt-[60vw]"
+              className="w-full h-[100vh] bg-[#0B1D32] -mt-[60vw]"
               style={{ zIndex: -1 }}
             />
           </div>
@@ -231,7 +228,7 @@ export default function HeroParallax() {
 
       </div>
       {/* 5. PADDING SPACER - Prevents overlap with portfolio content */}
-      <div className="h-[30vh] w-full pointer-events-none" />
+      <div className="h-[60vh] w-full pointer-events-none" />
     </div>
   );
 }

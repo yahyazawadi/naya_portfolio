@@ -146,7 +146,7 @@ export default function Home() {
         {/* ── Section 3 & 4: Intro & Grid ── */}
         <div className="relative">
           {/* Intro Text */}
-          <div className="relative z-70 text-center px-6 mt-[5vw] lg:mt-[2vw] pb-16 md:pb-32">
+          <div className="relative z-70 text-center px-6 pt-[140px] mt-[5vw] lg:mt-[2vw] pb-16 md:pb-32">
             <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
               Hi, I&apos;m{" "}
               <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">

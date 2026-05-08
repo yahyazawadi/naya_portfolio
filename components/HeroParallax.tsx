@@ -37,14 +37,14 @@ const glareLayers = [
 ];
 
 export default function HeroParallax() {
-  const [isDesktop, setIsDesktop] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(true);
   const [smoothScroll, setSmoothScroll] = useState(0);
   const [winHeight, setWinHeight] = useState(1000);
 
   const scrollYRef = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const stepRef = useRef(0);
-  const STEPS = [0, 350, 850, 1500]; // Defined keyframes for the reveal
+  const STEPS = [0, 350, 1480]; // Defined keyframes for the reveal
   const isAnimatingRef = useRef(false);
   const requestRef = useRef<number>();
 
@@ -97,8 +97,9 @@ export default function HeroParallax() {
     const animate = () => {
       setSmoothScroll((prev) => {
         const diff = scrollYRef.current - prev;
-        // Slower, heavier lerp for cinematic feel
-        return prev + diff * 0.03;
+        // Slower for first step (cinematic reveal), snappier for the rest
+        const factor = prev < 350 ? 0.012 : 0.03;
+        return prev + diff * factor;
       });
       requestRef.current = requestAnimationFrame(animate);
     };
@@ -115,24 +116,33 @@ export default function HeroParallax() {
     };
   }, []);
 
-  // Hide the browser scrollbar ONCE when desktop hero activates, restore on cleanup
+  // Clean up hero-done class on unmount
   useEffect(() => {
-    if (!isDesktop) return;
-    document.documentElement.style.overflow = 'hidden';
-    document.body.style.overflow = 'hidden';
     return () => {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
+      document.documentElement.classList.remove('hero-done');
     };
-  }, [isDesktop]);
+  }, []);
 
   // Restore scroll once the hero is done (smoothScroll crosses threshold once)
   useEffect(() => {
     if (smoothScroll > 1400 && isDesktop) {
-      document.documentElement.style.overflow = '';
-      document.body.style.overflow = '';
+      document.documentElement.classList.add('hero-done');
+    } else {
+      document.documentElement.classList.remove('hero-done');
     }
   }, [smoothScroll > 1400, isDesktop]);
+
+  // Step 2 (dark blue bg) → white navbar text; steps 0 & 1 (light cloud bg) → dark text
+  useEffect(() => {
+    if (currentStep === 2) {
+      document.documentElement.classList.add('hero-step-last');
+    } else {
+      document.documentElement.classList.remove('hero-step-last');
+    }
+    return () => {
+      document.documentElement.classList.remove('hero-step-last');
+    };
+  }, [currentStep]);
 
   if (!isDesktop) return null;
 
@@ -162,13 +172,31 @@ export default function HeroParallax() {
   const nayaStuckThreshold = 450; // Adjusted for earlier arrival
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
+  // Overlay fade: clouds/Naya are off-screen by ~850, fade dark bg to reveal portfolio
+  const overlayFade = smoothScroll > 900
+    ? Math.max(0, 1 - (smoothScroll - 900) / 500)
+    : 1;
+
   return (
     <div className="relative w-full h-0 bg-[#0B1D32]">
+      {/* 
+        PREVENT SCROLLBAR FLASH:
+        This style tag is SSR'd, so the browser sees it BEFORE the first paint.
+        It hides the scrollbar on desktop immediately.
+      */}
+      <style dangerouslySetInnerHTML={{ __html: `
+        @media (min-width: 1024px) {
+          html:not(.hero-done) { overflow: hidden !important; }
+          html:not(.hero-done) body { overflow: hidden !important; }
+          html.hero-done { overflow: auto !important; }
+        }
+      `}} />
 
       <div
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
         style={{
           display: isPastHero ? 'none' : 'block',
+          opacity: overlayFade,
           zIndex: 9999
         }}
       >
@@ -221,7 +249,7 @@ export default function HeroParallax() {
                 transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.15})`,
               }}
             >
-              <img src={layer.src} alt="" className="w-full h-full object-cover object-top" />
+              <img src={layer.src} alt="" className="w-full h-full object-cover object-top" fetchPriority="high" loading="eager" />
             </div>
           ))}
         </div>
@@ -249,7 +277,7 @@ export default function HeroParallax() {
               // This prevents the sharp clipping edges when translated.
               const CloudSlot = ({ src, className = "" }: { src: string; className?: string }) => (
                 <div className={`relative w-full h-[56.25vw] flex justify-center items-center ${className}`}>
-                  <img src={src} alt="" className="h-full w-auto max-w-none pointer-events-none" />
+                  <img src={src} alt="" className="h-full w-auto max-w-none pointer-events-none" loading="lazy" fetchPriority="low" />
                 </div>
               );
 
@@ -292,7 +320,7 @@ export default function HeroParallax() {
 
         {/* 3. NAYA & CIRCLES */}
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-0 -mt-[calc(5vw+90px)]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[1vw]"
           style={{
             transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
             opacity: nayaOpacity
@@ -303,7 +331,6 @@ export default function HeroParallax() {
             alt=""
             width={1865}
             height={562}
-            priority
             className="absolute w-[120%] max-w-none h-auto"
             style={{
               opacity: 0.6 + (nayaProgress * 0.4)
@@ -314,7 +341,6 @@ export default function HeroParallax() {
             alt="Naya"
             width={1200}
             height={1697}
-            priority
             className="relative w-[55%] max-w-[800px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.8)]"
             style={{
               transform: `translateY(${globalProgress * -150}px)`,

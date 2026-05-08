@@ -20,6 +20,19 @@ html {
   scroll-behavior: smooth;
 }
 
+/* Hero step 2: dark blue bg → white navbar text */
+html.hero-step-last .nav-link {
+  color: white !important;
+  transition: color 0.4s ease;
+}
+html.hero-step-last .site-logo {
+  color: white !important;
+  transition: color 0.4s ease;
+}
+.nav-link, .site-logo {
+  transition: color 0.4s ease;
+}
+
 /* ── Image Protection ── */
 img {
   -webkit-user-select: none;
@@ -48,7 +61,7 @@ img {
 @layer components {
   /* ── Navbar ─────────────────────────────────── */
   .navbar {
-    @apply absolute top-0 left-0 w-full z-50 bg-white/10 backdrop-blur-sm px-[20px] py-[20px] lg:px-[30px] lg:py-[30px];
+    @apply fixed top-0 left-0 w-full z-[10000] bg-white/20 backdrop-blur-md px-[20px] py-[20px] lg:px-[30px] lg:py-[30px];
   }
 
   .navbar-inner {
@@ -70,7 +83,7 @@ img {
   }
 
   .nav-link {
-    @apply font-sans text-[14px] xl:text-[16px] font-normal text-[#111555] no-underline whitespace-nowrap
+    @apply font-sans text-[14px] xl:text-[16px] font-normal text-[#48ABBF] no-underline whitespace-nowrap
            transition-colors duration-200 hover:text-[#18667D];
   }
 

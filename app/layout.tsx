@@ -64,8 +64,8 @@ export const metadata: Metadata = {
     follow: true,
   },
   icons: {
-    icon: "/vectors/naya_icon.png",
-    apple: "/vectors/naya_icon.png",
+    icon: "/vectors/naya_icon.webp",
+    apple: "/vectors/naya_icon.webp",
   },
 };
 

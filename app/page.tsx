@@ -88,7 +88,7 @@ export default function Home() {
           {/* Character + Vectors overlay */}
           <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[10vw] overflow-hidden">
             <Image
-              src="/vectors/mainpagebackgroundcirclescopy.png"
+              src="/vectors/mainpagebackgroundcirclescopy.webp"
               alt=""
               width={1865}
               height={562}
@@ -116,7 +116,7 @@ export default function Home() {
       */}
       <div className="absolute left-0 top-[1500px] pointer-events-none select-none z-[100]">
         <Image
-          src="/vectors/main_left_circles.png"
+          src="/vectors/main_left_circles.webp"
           alt="Decorative background circles"
           width={242}
           height={2493}
@@ -126,7 +126,7 @@ export default function Home() {
       </div>
       <div className="absolute right-0 top-[1500px] pointer-events-none select-none z-[100]">
         <Image
-          src="/vectors/main_right_circles.png"
+          src="/vectors/main_right_circles.webp"
           alt="Decorative background circles"
           width={295}
           height={2349}

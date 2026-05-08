@@ -88,6 +88,9 @@ export default function HeroParallax() {
     { count: 4, margin: "-mt-[35vw]" },
     { count: 4, margin: "-mt-[40vw]" },
     { count: 4, margin: "-mt-[45vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
   ];
 
   // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
@@ -168,27 +171,52 @@ export default function HeroParallax() {
           }}
         >
           <div className="w-full flex flex-col items-center">
-            {cloudGroups.map((group, index) => (
-              <div
-                key={index}
-                className={`relative w-full ${index > 0 ? group.margin : ""}`}
-              >
-                <Image src="/images/cloud_up.webp" alt="" width={1920} height={1080} priority className="w-full h-auto" />
-                <div className="absolute inset-0 w-full h-auto opacity-95">
-                  <Image src="/images/cloud_down.webp" alt="" width={1920} height={1080} priority className="w-full h-auto scale-x-[-1]" />
+            {cloudGroups.map((group, index) => {
+              // Pick cycles: each group slot gets a unique variant from the 6 available.
+              // The variants are ultra-wide (~5:1) vs the old 16:9 clouds.
+              // We lock every slot to 16:9 height (56.25vw) using aspect-video + object-cover
+              // so the layout geometry is identical to what the old cloud_up/down produced.
+              const pick = (offset: number) =>
+                `/images/cloud_variant_${((index * 2 + offset) % 6) + 1}.webp`;
+
+              // Shared wrapper: locks rendered height to 56.25vw (= original 1920×1080 at 100vw)
+              // We use flex centering and allow the wide images to overflow the screen horizontally
+              // This prevents the sharp clipping edges when translated.
+              const CloudSlot = ({ src, className = "" }: { src: string; className?: string }) => (
+                <div className={`relative w-full h-[56.25vw] flex justify-center items-center ${className}`}>
+                  <img src={src} alt="" className="h-full w-auto max-w-none pointer-events-none" />
                 </div>
-                {group.count >= 3 && (
-                  <div className="absolute inset-0 w-full h-auto opacity-90 translate-x-[5%] -translate-y-[3%]">
-                    <Image src="/images/cloud_up.webp" alt="" width={1920} height={1080} priority className="w-full h-auto" />
+              );
+
+              return (
+                <div
+                  key={index}
+                  className={`relative w-full ${index > 0 ? group.margin : ""}`}
+                >
+                  {/* Base layer */}
+                  <CloudSlot src={pick(0)} />
+
+                  {/* Overlay layer — flipped horizontally */}
+                  <div className="absolute inset-0 w-full h-full opacity-95 scale-x-[-1]">
+                    <CloudSlot src={pick(1)} />
                   </div>
-                )}
-                {group.count === 4 && (
-                  <div className="absolute inset-0 w-full h-auto opacity-85 -translate-x-[5%] translate-y-[3%] scale-x-[-1]">
-                    <Image src="/images/cloud_down.webp" alt="" width={1920} height={1080} priority className="w-full h-auto" />
-                  </div>
-                )}
-              </div>
-            ))}
+
+                  {/* 3rd layer (groups with count ≥ 3) */}
+                  {group.count >= 3 && (
+                    <div className="absolute inset-0 w-full h-full opacity-90 translate-x-[5%] -translate-y-[3%]">
+                      <CloudSlot src={pick(2)} />
+                    </div>
+                  )}
+
+                  {/* 4th layer (groups with count === 4) — flipped */}
+                  {group.count === 4 && (
+                    <div className="absolute inset-0 w-full h-full opacity-85 -translate-x-[5%] translate-y-[3%] scale-x-[-1]">
+                      <CloudSlot src={pick(3)} />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
 
             <div
               className="w-full h-[100vh] bg-[#0B1D32] -mt-[60vw]"
@@ -206,7 +234,7 @@ export default function HeroParallax() {
           }}
         >
           <Image
-            src="/vectors/mainpagebackgroundcirclescopy.png"
+            src="/vectors/mainpagebackgroundcirclescopy.webp"
             alt=""
             width={1865}
             height={562}

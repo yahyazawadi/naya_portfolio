@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Footer from './Footer';
+import SmartImage from './SmartImage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ArtGroup {
@@ -25,7 +26,7 @@ const isVideo = (src: string) => {
   return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
 };
 
-function AssetWithFade({ src, alt, className }: { src: string, alt: string, className?: string }) {
+function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt: string, className?: string, onConverted?: (newUrl: string) => void }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const video = isVideo(src);
 
@@ -42,16 +43,12 @@ function AssetWithFade({ src, alt, className }: { src: string, alt: string, clas
           playsInline
         />
       ) : (
-        <img
+        <SmartImage
           src={src}
           alt={alt}
           onLoad={() => setIsLoaded(true)}
           className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          ref={(img) => {
-            if (img?.complete && !isLoaded) {
-              setIsLoaded(true);
-            }
-          }}
+          onConverted={onConverted}
         />
       )}
       {!isLoaded && (
@@ -70,6 +67,7 @@ function GroupCard({
   group: ArtGroup;
   index: number;
   onSelect: () => void;
+  onConverted: (oldUrl: string, newUrl: string) => void;
 }) {
   const isLTR = index % 2 === 0;
 
@@ -91,13 +89,16 @@ function GroupCard({
       className={`flex-[1.4] cursor-pointer group/img ${
         !isLTR ? 'border-2 border-[#48ABBF] p-1' : ''
       }`}
-      onClick={onSelect}
     >
-      <div className="relative overflow-hidden group-hover/img:scale-[1.04] transition-transform duration-500">
+      <div 
+        className="relative overflow-hidden group-hover/img:scale-[1.04] transition-transform duration-500"
+        onClick={onSelect}
+      >
         <AssetWithFade 
           src={group.coverImage} 
           alt={group.title} 
           className="w-full h-[260px] md:h-[340px] lg:h-[380px] object-cover" 
+          onConverted={(newUrl) => onConverted(group.coverImage, newUrl)}
         />
         <div className="absolute inset-0 bg-[#48ABBF]/0 group-hover/img:bg-black/30 transition-all duration-300 flex items-center justify-center">
           <span className="text-white text-[16px] font-semibold opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-black/50 px-6 py-3 rounded-full backdrop-blur-sm tracking-wide">
@@ -230,9 +231,11 @@ function Lightbox({
 function GroupDetailView({
   group,
   onImageClick,
+  onConverted,
 }: {
   group: ArtGroup;
   onImageClick: (index: number) => void;
+  onConverted: (oldUrl: string, newUrl: string) => void;
 }) {
   return (
     <div className="w-full animate-fadeIn">
@@ -245,12 +248,17 @@ function GroupDetailView({
             key={i}
             id={`gallery-item-${i}`}
             className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm scroll-mt-24"
-            onClick={() => onImageClick(i)}
           >
             <AssetWithFade 
               src={src} 
               alt={`${group.title} ${i + 1}`} 
               className="w-full h-auto object-cover group-hover/tile:scale-[1.03] duration-500" 
+              onConverted={(newUrl) => onConverted(src, newUrl)}
+            />
+            {/* Click overlay to trigger gallery while allowing conversion icon to be clickable */}
+            <div 
+              className="absolute inset-0 z-10" 
+              onClick={() => onImageClick(i)} 
             />
           </div>
         ))}
@@ -260,7 +268,8 @@ function GroupDetailView({
 }
 
 // ─── GalleryPage Component ──────────────────────────────────────────────────────
-export default function GalleryPage({ title, groups }: GalleryPageProps) {
+export default function GalleryPage({ title, groups: initialGroups }: GalleryPageProps) {
+  const [localGroups, setLocalGroups] = useState<ArtGroup[]>(initialGroups);
   const [selectedGroup, setSelectedGroup] = useState<ArtGroup | null>(null);
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
   
@@ -272,7 +281,7 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
     const groupSlug = searchParams.get('id');
     if (groupSlug) {
       const targetSlug = groupSlug.toLowerCase();
-      const group = groups.find(g => {
+      const group = localGroups.find(g => {
         const currentSlug = g.title
           .replace(/&/g, 'and')
           .replace(/[^a-zA-Z0-9]/g, '-')
@@ -285,7 +294,34 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
         setSelectedGroup(group);
       }
     }
-  }, [searchParams, groups]);
+  }, [searchParams, localGroups]);
+
+  const handleImageConverted = useCallback((oldUrl: string, newUrl: string) => {
+    setLocalGroups(prev => prev.map(g => {
+      let updated = false;
+      let newCover = g.coverImage;
+      let newImages = [...g.images];
+
+      if (g.coverImage === oldUrl) {
+        newCover = newUrl;
+        updated = true;
+      }
+      if (g.images.includes(oldUrl)) {
+        newImages = newImages.map(img => img === oldUrl ? newUrl : img);
+        updated = true;
+      }
+
+      if (updated) {
+        const updatedGroup = { ...g, coverImage: newCover, images: newImages };
+        // If this group is currently selected, update it too
+        if (selectedGroup?.id === g.id) {
+          setSelectedGroup(updatedGroup);
+        }
+        return updatedGroup;
+      }
+      return g;
+    }));
+  }, [selectedGroup]);
 
   const handleNext = useCallback(() => {
     if (lightboxIndex !== null && selectedGroup) {
@@ -369,10 +405,10 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
 
       {/* ── Side circles ── */}
       <div className="absolute left-0 top-[280px] md:top-[320px] pointer-events-none select-none z-20">
-        <img src="/vectors/page_left_side.png" alt="" className="w-[90px] md:w-[110px] lg:w-[130px] h-auto" />
+        <img src="/vectors/page_left_side.webp" alt="" className="w-[90px] md:w-[110px] lg:w-[130px] h-auto" />
       </div>
       <div className="absolute right-0 top-[280px] md:top-[320px] pointer-events-none select-none z-20">
-        <img src="/vectors/page_right_side.png" alt="" className="w-[90px] md:w-[110px] lg:w-[130px] h-auto" />
+        <img src="/vectors/page_right_side.webp" alt="" className="w-[90px] md:w-[110px] lg:w-[130px] h-auto" />
       </div>
 
       {/* ── Content ── */}
@@ -381,15 +417,17 @@ export default function GalleryPage({ title, groups }: GalleryPageProps) {
           <GroupDetailView 
             group={selectedGroup} 
             onImageClick={(idx) => setLightboxIndex(idx)} 
+            onConverted={handleImageConverted}
           />
         ) : (
           <div className="flex flex-col">
-            {groups.map((group, i) => (
+            {localGroups.map((group, i) => (
               <GroupCard
                 key={group.id}
                 group={group}
                 index={i}
                 onSelect={() => handleSelect(group)}
+                onConverted={handleImageConverted}
               />
             ))}
           </div>

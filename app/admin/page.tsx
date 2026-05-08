@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { uploadImage } from '../actions/upload';
 import { savePortfolioGroup, getAllPortfolioGroups, deletePortfolioGroup, updatePortfolioGroup } from '../actions/portfolio';
 import { logout } from '../actions/auth';
+import SmartImage from '@/components/SmartImage';
 
 const categories = [
   { id: 'digital-art', label: 'Digital art & Illustrations' },
@@ -100,6 +101,35 @@ export default function AdminDashboard() {
     } catch (err: any) {
       alert('Delete failed: ' + err.message);
       setExistingItems(previousItems); // Rollback
+    }
+  };
+
+  const handleImageConverted = (oldUrl: string, newUrl: string) => {
+    // Update local state to reflect the change immediately
+    setExistingItems(prev => prev.map(item => {
+      let updated = false;
+      let newCover = item.coverImage;
+      let newImages = [...(item.images || [])];
+
+      if (item.coverImage === oldUrl) {
+        newCover = newUrl;
+        updated = true;
+      }
+
+      if (item.images?.includes(oldUrl)) {
+        newImages = newImages.map(img => img === oldUrl ? newUrl : img);
+        updated = true;
+      }
+
+      if (updated) {
+        return { ...item, coverImage: newCover, images: newImages };
+      }
+      return item;
+    }));
+
+    if (existingCoverImage === oldUrl) setExistingCoverImage(newUrl);
+    if (existingGallery.includes(oldUrl)) {
+      setExistingGallery(prev => prev.map(url => url === oldUrl ? newUrl : url));
     }
   };
 
@@ -304,7 +334,12 @@ export default function AdminDashboard() {
                       {isVideo(existingCoverImage) ? (
                         <video src={existingCoverImage} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                       ) : (
-                        <img src={existingCoverImage} className="w-full h-full object-cover" alt="" />
+                        <SmartImage 
+                          src={existingCoverImage} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          onConverted={(newUrl) => handleImageConverted(existingCoverImage, newUrl)}
+                        />
                       )}
                       <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                          <label className="cursor-pointer bg-[#48ABBF] text-[#051C30] px-4 py-2 rounded-lg font-bold text-sm">
@@ -350,7 +385,12 @@ export default function AdminDashboard() {
                       {isVideo(url) ? (
                         <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                       ) : (
-                        <img src={url} className="w-full h-full object-cover" alt="" />
+                        <SmartImage 
+                          src={url} 
+                          className="w-full h-full object-cover" 
+                          alt="" 
+                          onConverted={(newUrl) => handleImageConverted(url, newUrl)}
+                        />
                       )}
                       <button 
                         type="button"
@@ -454,7 +494,12 @@ export default function AdminDashboard() {
                     {isVideo(item.coverImage) ? (
                       <video src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
                     ) : (
-                      <img src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" alt="" />
+                      <SmartImage 
+                        src={item.coverImage} 
+                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" 
+                        alt="" 
+                        onConverted={(newUrl) => handleImageConverted(item.coverImage, newUrl)}
+                      />
                     )}
                     <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
                       <button onClick={() => handleEdit(item)} className="p-2.5 bg-black/60 hover:bg-[#48ABBF] hover:text-black rounded-xl backdrop-blur-md transition-all shadow-xl">

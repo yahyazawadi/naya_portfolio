@@ -9,12 +9,12 @@ export default function Footer({ hideStrips = false }: FooterProps) {
       {!hideStrips && (
         <div className="absolute bottom-0 left-0 right-0 h-[1000px] pointer-events-none select-none z-20">
           <img
-            src="/vectors/main_left_circles.png"
+            src="/vectors/main_left_circles.webp"
             alt=""
             className="absolute left-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
           />
           <img
-            src="/vectors/main_right_circles.png"
+            src="/vectors/main_right_circles.webp"
             alt=""
             className="absolute right-0 bottom-0 w-[200px] md:w-[250px] lg:w-[300px] h-auto opacity-90 object-cover object-bottom"
           />
@@ -91,7 +91,7 @@ export default function Footer({ hideStrips = false }: FooterProps) {
           {/* Right side — relative with high z-index to overlap divider */}
           <div className="relative w-full md:w-[55%] flex justify-center md:justify-end z-50">
             <img
-              src="/vectors/bottompagecirclesandnaya.png"
+              src="/vectors/bottompagecirclesandnaya.webp"
               alt="Naya with decorative circles"
               className="w-full max-w-[1000px] h-auto pointer-events-none select-none drop-shadow-2xl scale-110 md:scale-125 origin-right"
             />

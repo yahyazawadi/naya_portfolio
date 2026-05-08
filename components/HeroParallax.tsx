@@ -70,11 +70,11 @@ export default function HeroParallax() {
 
   if (!isDesktop) return null;
 
-  // FINAL SYNCED TRIGGERS: Coordinated for a fast, punchy 4-layer reveal
-  const HALF_WHEEL = 250; // Delay cloud start slightly to wait for scroll momentum
-  const FULL_ROTATION = 400; // Start Naya reveal sooner
+  // FINAL SYNCED TRIGGERS: Coordinated for a fast, punchy reveal
+  const HALF_WHEEL = 100; // Start clouds almost immediately
+  const FULL_ROTATION = 200; // Start Naya reveal much sooner
 
-  const totalScrollHeight = winHeight * 1.9;
+  const totalScrollHeight = winHeight * 1.4; // Reduced overall scroll distance
   const isPastHero = smoothScroll > totalScrollHeight + 250;
 
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
@@ -82,11 +82,9 @@ export default function HeroParallax() {
   const cloudOpacity = 0.5 + Math.min(cloudActiveScroll / 300, 0.5);
   const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 250, 0), 1);
 
-  // Dense cloud reveal: 4 high-density layers
+  // Dense cloud reveal: Removed the top 2 layers to decrease clouds above Naya
   const cloudGroups = [
-    { count: 3, margin: "-mt-[25vw]" },
-    { count: 4, margin: "-mt-[35vw]" },
-    { count: 4, margin: "-mt-[40vw]" },
+    { count: 4, margin: "-mt-[30vw]" },
     { count: 4, margin: "-mt-[45vw]" },
     { count: 4, margin: "-mt-[45vw]" },
     { count: 4, margin: "-mt-[45vw]" },
@@ -94,11 +92,11 @@ export default function HeroParallax() {
   ];
 
   // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
-  const nayaStuckThreshold = 650; // Stuck point moved up to match faster cloud arrival
+  const nayaStuckThreshold = 450; // Adjusted for earlier arrival
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
   return (
-    <div className="relative w-full h-[245vh] bg-[#0B1D32]">
+    <div className="relative w-full h-[190vh] bg-[#0B1D32]">
 
       <div
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
@@ -163,7 +161,7 @@ export default function HeroParallax() {
 
         {/* 2. PROGRESSIVE HYBRID CLOUD PILLAR */}
         <div
-          className="absolute top-[65%] left-0 w-full z-30 flex flex-col items-center"
+          className="absolute top-[75%] left-0 w-full z-30 flex flex-col items-center"
           style={{
             // velocity remains 4.5px for the cinematic feel
             transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(1)`,

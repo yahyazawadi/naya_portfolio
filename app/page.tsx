@@ -39,7 +39,7 @@ const portfolioItems = [
 
 export default function Home() {
   return (
-    <div className="relative w-full bg-[#0B1D32]">
+    <div className="relative w-full bg-[#0B1D32]" style={{ overflow: 'clip' }}>
       {/* 
           ANIMATED HERO (Desktop Only)
       */}

@@ -70,7 +70,7 @@ export default function HeroParallax() {
 
     const handleWheel = (e: WheelEvent) => {
       const isAtTop = window.scrollY <= 5;
-      
+
       if (isAtTop) {
         if (e.deltaY > 0 && stepRef.current < STEPS.length - 1) {
           e.preventDefault();
@@ -115,6 +115,25 @@ export default function HeroParallax() {
     };
   }, []);
 
+  // Hide the browser scrollbar ONCE when desktop hero activates, restore on cleanup
+  useEffect(() => {
+    if (!isDesktop) return;
+    document.documentElement.style.overflow = 'hidden';
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    };
+  }, [isDesktop]);
+
+  // Restore scroll once the hero is done (smoothScroll crosses threshold once)
+  useEffect(() => {
+    if (smoothScroll > 1400 && isDesktop) {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+    }
+  }, [smoothScroll > 1400, isDesktop]);
+
   if (!isDesktop) return null;
 
   // FINAL SYNCED TRIGGERS: Coordinated for a fast, punchy reveal
@@ -122,7 +141,7 @@ export default function HeroParallax() {
   const FULL_ROTATION = 200; // Start Naya reveal much sooner
 
   const totalScrollHeight = winHeight * 1.4; // Reduced overall scroll distance
-  const isPastHero = smoothScroll > totalScrollHeight + 250;
+  const isPastHero = smoothScroll > 1400; // Triggers before STEPS[3]=1500 asymptote
 
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
@@ -144,13 +163,13 @@ export default function HeroParallax() {
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
   return (
-    <div className="relative w-full h-[190vh] bg-[#0B1D32]">
+    <div className="relative w-full h-0 bg-[#0B1D32]">
 
       <div
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
         style={{
           display: isPastHero ? 'none' : 'block',
-          zIndex: 50
+          zIndex: 9999
         }}
       >
 
@@ -305,7 +324,7 @@ export default function HeroParallax() {
 
       </div>
       {/* 5. PADDING SPACER - Prevents overlap with portfolio content */}
-      <div className="h-[60vh] w-full pointer-events-none" />
+
     </div>
   );
 }

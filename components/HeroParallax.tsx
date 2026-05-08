@@ -5,9 +5,9 @@ import Image from "next/image";
 
 const layers = [
   { src: "/images/city1.webp", speed: -0.05, z: 20 },
-  { src: "/images/city2.webp", speed: -0.15, z: 21 },
-  { src: "/images/city3.webp", speed: -0.25, z: 22 },
-  { src: "/images/city4.webp", speed: -0.4, z: 23 },
+  { src: "/images/city2.webp", speed: -0.3, z: 21 },
+  { src: "/images/city3.webp", speed: -0.7, z: 22 },
+  { src: "/images/city4.webp", speed: -1.2, z: 23 },
 ];
 
 // Doubled glare instances for high-density bokeh sky
@@ -28,6 +28,12 @@ const glareLayers = [
   { left: '60%', top: '110%', scale: 0.7, opacity: 0.3 },
   { left: '95%', top: '135%', scale: 0.8, opacity: 0.5 },
   { left: '15%', top: '145%', scale: 0.9, opacity: 0.4 },
+  { left: '45%', top: '160%', scale: 1.2, opacity: 0.4 },
+  { left: '75%', top: '175%', scale: 0.8, opacity: 0.3 },
+  { left: '5%', top: '190%', scale: 1.5, opacity: 0.5 },
+  { left: '85%', top: '155%', scale: 0.6, opacity: 0.4 },
+  { left: '40%', top: '210%', scale: 1.1, opacity: 0.3 },
+  { left: '65%', top: '230%', scale: 0.9, opacity: 0.4 },
 ];
 
 export default function HeroParallax() {
@@ -36,6 +42,10 @@ export default function HeroParallax() {
   const [winHeight, setWinHeight] = useState(1000);
 
   const scrollYRef = useRef(0);
+  const [currentStep, setCurrentStep] = useState(0);
+  const stepRef = useRef(0);
+  const STEPS = [0, 350, 850, 1500]; // Defined keyframes for the reveal
+  const isAnimatingRef = useRef(false);
   const requestRef = useRef<number>();
 
   useEffect(() => {
@@ -47,23 +57,60 @@ export default function HeroParallax() {
     window.addEventListener("resize", handleResize);
 
     const handleScroll = () => {
-      scrollYRef.current = window.scrollY;
+      const y = window.scrollY;
+      if (y > 0) {
+        scrollYRef.current = y + STEPS[STEPS.length - 1];
+        // Sync step if we scroll into the portfolio
+        if (stepRef.current !== STEPS.length - 1) {
+          stepRef.current = STEPS.length - 1;
+          setCurrentStep(STEPS.length - 1);
+        }
+      }
+    };
+
+    const handleWheel = (e: WheelEvent) => {
+      const isAtTop = window.scrollY <= 5;
+      
+      if (isAtTop) {
+        if (e.deltaY > 0 && stepRef.current < STEPS.length - 1) {
+          e.preventDefault();
+          if (!isAnimatingRef.current) {
+            isAnimatingRef.current = true;
+            stepRef.current += 1;
+            setCurrentStep(stepRef.current);
+            scrollYRef.current = STEPS[stepRef.current];
+            setTimeout(() => { isAnimatingRef.current = false; }, 600);
+          }
+        } else if (e.deltaY < 0 && stepRef.current > 0) {
+          e.preventDefault();
+          if (!isAnimatingRef.current) {
+            isAnimatingRef.current = true;
+            stepRef.current -= 1;
+            setCurrentStep(stepRef.current);
+            scrollYRef.current = STEPS[stepRef.current];
+            setTimeout(() => { isAnimatingRef.current = false; }, 600);
+          }
+        }
+      }
     };
 
     const animate = () => {
       setSmoothScroll((prev) => {
         const diff = scrollYRef.current - prev;
-        return prev + diff * 0.08;
+        // Slower, heavier lerp for cinematic feel
+        return prev + diff * 0.03;
       });
       requestRef.current = requestAnimationFrame(animate);
     };
 
     window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener("wheel", handleWheel, { passive: false });
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("wheel", handleWheel);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
     };
   }, []);
@@ -80,7 +127,8 @@ export default function HeroParallax() {
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
   const cloudOpacity = 0.5 + Math.min(cloudActiveScroll / 300, 0.5);
-  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 250, 0), 1);
+  const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 150, 0), 1);
+  const nayaOpacity = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 80, 0), 1);
 
   // Dense cloud reveal: Removed the top 2 layers to decrease clouds above Naya
   const cloudGroups = [
@@ -102,7 +150,7 @@ export default function HeroParallax() {
         className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
         style={{
           display: isPastHero ? 'none' : 'block',
-          zIndex: 0
+          zIndex: 50
         }}
       >
 
@@ -120,7 +168,7 @@ export default function HeroParallax() {
                 zIndex: 25,
                 width: '65vw',
                 // Constant fast velocity, but takes longer to be covered by clouds
-                transform: `translateY(${globalProgress * -8000}px) scale(${glare.scale})`,
+                transform: `translateY(${globalProgress * -15000}px) scale(${glare.scale})`,
                 opacity: 1.0
               }}
             >
@@ -225,10 +273,10 @@ export default function HeroParallax() {
 
         {/* 3. NAYA & CIRCLES */}
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-[10vw]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 -mt-[calc(5vw+90px)]"
           style={{
             transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
-            opacity: nayaProgress
+            opacity: nayaOpacity
           }}
         >
           <Image

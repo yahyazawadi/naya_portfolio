@@ -63,6 +63,7 @@ function GroupCard({
   group,
   index,
   onSelect,
+  onConverted,
 }: {
   group: ArtGroup;
   index: number;

@@ -79,7 +79,7 @@ export default function SmartImage({ src, alt, className, onConverted, ...props 
       });
 
       if (!uploadRes.ok) throw new Error('Upload failed');
-      const { url: newUrl } = await uploadRes.json();
+      const { url: newUrl } = (await uploadRes.json()) as { url: string };
 
       const updateRes = await fetch('/api/image/replace', {
         method: 'POST',

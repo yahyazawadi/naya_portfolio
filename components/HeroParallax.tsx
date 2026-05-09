@@ -46,7 +46,7 @@ export default function HeroParallax() {
   const stepRef = useRef(0);
   const STEPS = [0, 350, 1480]; // Defined keyframes for the reveal
   const isAnimatingRef = useRef(false);
-  const requestRef = useRef<number>();
+  const requestRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const handleResize = () => {

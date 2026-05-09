@@ -29,7 +29,20 @@ export default function Navbar() {
         <ul className="nav-links">
           {navLinks.map((link) => (
             <li key={link.href}>
-              <Link href={link.href} className={`nav-link ${isDark ? "!text-white hover:!text-[#48ABBF]" : ""}`}>
+              <Link 
+                href={link.href} 
+                className={`nav-link ${isDark ? "!text-white hover:!text-[#48ABBF]" : ""}`}
+                onClick={(e) => {
+                  if (link.href.startsWith("#")) {
+                    e.preventDefault();
+                    window.dispatchEvent(new Event('skipHero'));
+                    setTimeout(() => {
+                      const el = document.querySelector(link.href);
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }
+                }}
+              >
                 {link.label}
               </Link>
             </li>
@@ -67,7 +80,17 @@ export default function Navbar() {
               <Link
                 href={link.href}
                 className="mobile-nav-link"
-                onClick={() => setMenuOpen(false)}
+                onClick={(e) => {
+                  if (link.href.startsWith("#")) {
+                    e.preventDefault();
+                    window.dispatchEvent(new Event('skipHero'));
+                    setTimeout(() => {
+                      const el = document.querySelector(link.href);
+                      if (el) el.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }
+                  setMenuOpen(false);
+                }}
               >
                 {link.label}
               </Link>

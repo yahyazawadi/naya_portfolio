@@ -5,7 +5,6 @@ import Link from "next/link";
 import Footer from "../components/Footer";
 import PortfolioPrefetcher from "../components/PortfolioPrefetcher";
 import HeroParallax from "../components/HeroParallax";
-
 const portfolioItems = [
   {
     src: "/images/DigitalArt&Illustration.webp",
@@ -49,44 +48,35 @@ export default function Home() {
 
       {/* 
           STATIC HERO (Mobile Only)
-          Keeping the original code exactly as it was for stability.
       */}
-      <div className="lg:hidden">
-        {/* SECTION 1 — City skyline */}
+      <div className="lg:hidden flex flex-col relative w-full overflow-hidden z-0">
         <div className="relative w-full overflow-hidden z-0">
           <div className="relative w-[130%] md:w-[110%] -left-[15%] md:-left-[5%]">
             <img
-              src="/images/city1.webp"
+              src="/images/city.webp"
               alt="City Background"
-              className="w-full h-auto block object-cover"
+              className="w-full h-auto block"
             />
           </div>
         </div>
 
-        {/* SECTION 2 — Clouds & Character */}
-        <div className="relative w-full -mt-[45vw] md:-mt-[40vw] z-60">
+        <div className="relative w-full -mt-[36vw] md:-mt-[40vw] z-60">
           {/* Upper cloud layer */}
-          <Image
-            src="/images/cloud_up.webp"
+          <img
+            src="/images/cloud_small_1.webp"
             alt=""
-            width={1920}
-            height={1080}
-            priority
             className="relative w-full h-auto block z-10"
           />
 
           {/* Lower cloud layer */}
-          <Image
-            src="/images/cloud_down.webp"
+          <img
+            src="/images/cloud_small_2.webp"
             alt=""
-            width={1920}
-            height={1080}
-            priority
-            className="relative w-full h-auto block z-10 -mt-[12vw]"
+            className="relative w-full h-auto block z-10 -mt-[12vw] opacity-[0.65]"
           />
 
           {/* Character + Vectors overlay */}
-          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[10vw] overflow-hidden">
+          <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none pt-[5vw] overflow-hidden">
             <Image
               src="/vectors/mainpagebackgroundcirclescopy.webp"
               alt=""
@@ -146,7 +136,7 @@ export default function Home() {
         {/* ── Section 3 & 4: Intro & Grid ── */}
         <div className="relative">
           {/* Intro Text */}
-          <div className="relative z-70 text-center px-6 pt-[140px] mt-[5vw] lg:mt-[2vw] pb-16 md:pb-32">
+          <div className="relative z-70 text-center px-6 pt-0 lg:pt-[140px] mt-[5vw] lg:mt-[2vw] pb-10 md:pb-32">
             <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
               Hi, I&apos;m{" "}
               <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">

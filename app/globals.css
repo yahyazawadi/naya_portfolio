@@ -29,8 +29,11 @@ html.hero-step-last .site-logo {
   color: white !important;
   transition: color 0.4s ease;
 }
-.nav-link, .site-logo {
-  transition: color 0.4s ease;
+html.hero-step-last .hamburger-line {
+  background-color: white !important;
+}
+.nav-link, .site-logo, .hamburger-line {
+  transition: all 0.4s ease;
 }
 
 /* ── Image Protection ── */
@@ -61,7 +64,11 @@ img {
 @layer components {
   /* ── Navbar ─────────────────────────────────── */
   .navbar {
-    @apply fixed top-0 left-0 w-full z-[10000] bg-white/20 backdrop-blur-md px-[20px] py-[20px] lg:px-[30px] lg:py-[30px];
+    @apply fixed top-0 left-0 w-full z-[10000] bg-white/10 lg:bg-white/20 backdrop-blur-md px-[20px] py-[20px] lg:px-[30px] lg:py-[30px] transition-colors duration-300;
+  }
+  
+  .navbar.dark-nav {
+    @apply bg-white/60 lg:bg-white/20;
   }
 
   .navbar-inner {
@@ -93,7 +100,7 @@ img {
   }
 
   .hamburger-line {
-    @apply block w-[26px] h-[2px] bg-[#111555] rounded-sm transition-all duration-200;
+    @apply block w-[26px] h-[2px] bg-[#48ABBF] rounded-sm transition-all duration-200;
   }
 
   /* Mobile dropdown */

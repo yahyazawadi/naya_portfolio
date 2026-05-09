@@ -9,7 +9,6 @@ export const metadata: Metadata = {
 };
 
 export const runtime = 'edge';
-export const revalidate = 0; // Required for Cloudflare D1 in Next.js
 
 export default async function AnimationPage() {
   const groups = await getPortfolioGroups('animation');

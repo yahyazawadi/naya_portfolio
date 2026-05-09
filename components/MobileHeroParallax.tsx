@@ -4,40 +4,24 @@ import { useEffect, useState, useRef } from "react";
 import Image from "next/image";
 
 const layers = [
-  { src: "/images/city1.webp", speed: -0.05, z: 20 },
-  { src: "/images/city2.webp", speed: -0.3, z: 21 },
-  { src: "/images/city3.webp", speed: -0.7, z: 22 },
-  { src: "/images/city4.webp", speed: -1.2, z: 23 },
+  { src: "/images/city.webp", speed: -0.1, z: 20 },
 ];
 
-// Doubled glare instances for high-density bokeh sky
+// Increased glare scale and opacity for a bloomy white/sunshine look
 const glareLayers = [
-  // Upper section
-  { left: '10%', top: '5%', scale: 0.9, opacity: 0.5 },
-  { left: '40%', top: '15%', scale: 0.9, opacity: 0.3 },
-  { left: '70%', top: '10%', scale: 0.5, opacity: 0.6 },
-  { left: '90%', top: '25%', scale: 0.2, opacity: 0.4 },
-  // Middle section
-  { left: '20%', top: '45%', scale: 1.1, opacity: 0.3 },
-  { left: '55%', top: '60%', scale: 1.4, opacity: 0.4 },
-  { left: '80%', top: '40%', scale: 0.9, opacity: 0.5 },
-  { left: '5%', top: '55%', scale: 0.3, opacity: 0.3 },
-  // Bottom section (enters during scroll)
-  { left: '-15%', top: '100%', scale: 0.9, opacity: 0.4 },
-  { left: '30%', top: '120%', scale: 0.9, opacity: 0.5 },
-  { left: '60%', top: '110%', scale: 0.7, opacity: 0.3 },
-  { left: '95%', top: '135%', scale: 0.8, opacity: 0.5 },
-  { left: '15%', top: '145%', scale: 0.9, opacity: 0.4 },
-  { left: '45%', top: '160%', scale: 1.2, opacity: 0.4 },
-  { left: '75%', top: '175%', scale: 0.8, opacity: 0.3 },
-  { left: '5%', top: '190%', scale: 1.5, opacity: 0.5 },
-  { left: '85%', top: '155%', scale: 0.6, opacity: 0.4 },
-  { left: '40%', top: '210%', scale: 1.1, opacity: 0.3 },
-  { left: '65%', top: '230%', scale: 0.9, opacity: 0.4 },
+  { left: '10%', top: '5%', scale: 1.5, opacity: 0.8 },
+  { left: '60%', top: '15%', scale: 1.2, opacity: 0.7 },
+  { left: '25%', top: '30%', scale: 1.8, opacity: 0.8 },
+  { left: '75%', top: '45%', scale: 1.4, opacity: 0.7 },
+  { left: '-5%', top: '65%', scale: 1.6, opacity: 0.8 },
+  { left: '55%', top: '80%', scale: 2.0, opacity: 0.7 },
+  { left: '85%', top: '110%', scale: 1.3, opacity: 0.6 },
+  { left: '15%', top: '130%', scale: 1.7, opacity: 0.8 },
+  { left: '45%', top: '150%', scale: 1.5, opacity: 0.7 },
 ];
 
-export default function HeroParallax() {
-  const [isDesktop, setIsDesktop] = useState(true);
+export default function MobileHeroParallax() {
+  const [isMobile, setIsMobile] = useState(true);
   const [smoothScroll, setSmoothScroll] = useState(0);
   const [winHeight, setWinHeight] = useState(1000);
 
@@ -50,7 +34,7 @@ export default function HeroParallax() {
 
   useEffect(() => {
     const handleResize = () => {
-      setIsDesktop(window.innerWidth > 1024);
+      setIsMobile(window.innerWidth <= 1024);
       setWinHeight(window.innerHeight);
     };
     handleResize();
@@ -94,14 +78,43 @@ export default function HeroParallax() {
       }
     };
 
-    const animate = () => {
-      setSmoothScroll((prev) => {
-        const diff = scrollYRef.current - prev;
-        // Slower for first step (cinematic reveal), snappier for the rest
-        const factor = prev < 350 ? 0.012 : 0.03;
-        return prev + diff * factor;
-      });
-      requestRef.current = requestAnimationFrame(animate);
+    // Mobile specific: handle touch events for swipe-based scroll hijacking
+    let touchStartY = 0;
+    const handleTouchStart = (e: TouchEvent) => {
+      if (window.scrollY <= 5) {
+        touchStartY = e.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const isAtTop = window.scrollY <= 5;
+      if (!isAtTop) return;
+
+      const touchEndY = e.touches[0].clientY;
+      const deltaY = touchStartY - touchEndY;
+
+      // Only hijack if it's a significant swipe
+      if (Math.abs(deltaY) > 30) {
+        if (deltaY > 0 && stepRef.current < STEPS.length - 1) {
+          e.preventDefault();
+          if (!isAnimatingRef.current) {
+            isAnimatingRef.current = true;
+            stepRef.current += 1;
+            setCurrentStep(stepRef.current);
+            scrollYRef.current = STEPS[stepRef.current];
+            setTimeout(() => { isAnimatingRef.current = false; }, 600);
+          }
+        } else if (deltaY < 0 && stepRef.current > 0) {
+          e.preventDefault();
+          if (!isAnimatingRef.current) {
+            isAnimatingRef.current = true;
+            stepRef.current -= 1;
+            setCurrentStep(stepRef.current);
+            scrollYRef.current = STEPS[stepRef.current];
+            setTimeout(() => { isAnimatingRef.current = false; }, 600);
+          }
+        }
+      }
     };
 
     const handleSkipHero = () => {
@@ -113,33 +126,53 @@ export default function HeroParallax() {
 
     window.addEventListener("scroll", handleScroll, { passive: true });
     window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
     window.addEventListener("skipHero", handleSkipHero);
+    
+    const animate = () => {
+      setSmoothScroll((prev) => {
+        const diff = scrollYRef.current - prev;
+        const factor = prev < 350 ? 0.012 : 0.03;
+        return prev + diff * factor;
+      });
+      requestRef.current = requestAnimationFrame(animate);
+    };
+    
     requestRef.current = requestAnimationFrame(animate);
 
     return () => {
       window.removeEventListener("resize", handleResize);
       window.removeEventListener("scroll", handleScroll);
       window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
       window.removeEventListener("skipHero", handleSkipHero);
       if (requestRef.current) cancelAnimationFrame(requestRef.current);
+      // CRITICAL: remove all html-level locks on unmount (page navigation)
+      document.documentElement.classList.remove('hero-done-mobile');
+      document.documentElement.classList.remove('hero-step-last');
+      // Force scroll to re-enable in case CSS injection persisted
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
     };
   }, []);
 
   // Clean up hero-done class on unmount
   useEffect(() => {
     return () => {
-      document.documentElement.classList.remove('hero-done');
+      document.documentElement.classList.remove('hero-done-mobile');
     };
   }, []);
 
   // Restore scroll once the hero is done (smoothScroll crosses threshold once)
   useEffect(() => {
-    if (smoothScroll > 1400 && isDesktop) {
-      document.documentElement.classList.add('hero-done');
+    if (smoothScroll > 1400 && isMobile) {
+      document.documentElement.classList.add('hero-done-mobile');
     } else {
-      document.documentElement.classList.remove('hero-done');
+      document.documentElement.classList.remove('hero-done-mobile');
     }
-  }, [smoothScroll > 1400, isDesktop]);
+  }, [smoothScroll > 1400, isMobile]);
 
   // Step 2 (dark blue bg) → white navbar text; steps 0 & 1 (light cloud bg) → dark text
   useEffect(() => {
@@ -153,14 +186,13 @@ export default function HeroParallax() {
     };
   }, [currentStep]);
 
-  if (!isDesktop) return null;
+  if (!isMobile) return null;
 
-  // FINAL SYNCED TRIGGERS: Coordinated for a fast, punchy reveal
-  const HALF_WHEEL = 100; // Start clouds almost immediately
-  const FULL_ROTATION = 200; // Start Naya reveal much sooner
+  const HALF_WHEEL = 100;
+  const FULL_ROTATION = 200;
 
-  const totalScrollHeight = winHeight * 1.4; // Reduced overall scroll distance
-  const isPastHero = smoothScroll > 1400; // Triggers before STEPS[3]=1500 asymptote
+  const totalScrollHeight = winHeight * 1.4;
+  const isPastHero = smoothScroll > 1400;
 
   const globalProgress = Math.min(Math.max(smoothScroll / totalScrollHeight, 0), 1);
   const cloudActiveScroll = Math.max(0, smoothScroll - HALF_WHEEL);
@@ -168,52 +200,45 @@ export default function HeroParallax() {
   const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 150, 0), 1);
   const nayaOpacity = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 80, 0), 1);
 
-  // Dense cloud reveal: Removed the top 2 layers to decrease clouds above Naya
+  // Dense cloud wall for mobile — 8 groups with heavy overlap
   const cloudGroups = [
-    { count: 4, margin: "-mt-[30vw]" },
-    { count: 4, margin: "-mt-[45vw]" },
-    { count: 4, margin: "-mt-[45vw]" },
-    { count: 4, margin: "-mt-[45vw]" },
-    { count: 4, margin: "-mt-[45vw]" },
+    { count: 4, margin: "-mt-[40vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
+    { count: 4, margin: "-mt-[70vw]" },
   ];
 
-  // Naya's "Stuck" logic: once she is revealed, she hooks onto the clouds and moves up
-  const nayaStuckThreshold = 450; // Adjusted for earlier arrival
+  const nayaStuckThreshold = 450;
   const nayaStuckOffset = Math.max(0, smoothScroll - nayaStuckThreshold);
 
-  // Overlay fade: clouds/Naya are off-screen by ~850, fade dark bg to reveal portfolio
   const overlayFade = smoothScroll > 900
     ? Math.max(0, 1 - (smoothScroll - 900) / 500)
     : 1;
 
   return (
-    <div className="relative w-full h-0 bg-[#0B1D32]">
-      {/* 
-        PREVENT SCROLLBAR FLASH:
-        This style tag is SSR'd, so the browser sees it BEFORE the first paint.
-        It hides the scrollbar on desktop immediately.
-      */}
+    <div className="relative w-full h-0" style={{ background: 'linear-gradient(to bottom, #4c6279 0%, #0B1D32 100%)' }}>
       <style dangerouslySetInnerHTML={{ __html: `
-        @media (min-width: 1024px) {
-          html:not(.hero-done) { overflow: hidden !important; }
-          html:not(.hero-done) body { overflow: hidden !important; }
-          html.hero-done { overflow: auto !important; }
+        @media (max-width: 1023px) {
+          html:not(.hero-done-mobile) { overflow: hidden !important; }
+          html:not(.hero-done-mobile) body { overflow: hidden !important; }
+          html.hero-done-mobile { overflow: auto !important; }
         }
       `}} />
 
       <div
-        className="fixed inset-0 bg-[#0B1D32] overflow-hidden pointer-events-none"
+        className="fixed inset-0 overflow-hidden pointer-events-none"
         style={{
+          background: 'linear-gradient(to bottom, #4c6279 0%, #0B1D32 100%)',
           display: isPastHero ? 'none' : 'block',
           opacity: overlayFade,
           zIndex: 9999
         }}
       >
-
-        {/* 1. CITY SKYLINE & LENS FLARES */}
         <div className="absolute inset-0 w-full h-full z-10" style={{ opacity: 1 - nayaProgress }}>
-
-          {/* HIGH-SPEED CITY GLARES (Lens Flares) - Doubled & Intensified */}
           {glareLayers.map((glare, i) => (
             <div
               key={`glare-${i}`}
@@ -222,9 +247,8 @@ export default function HeroParallax() {
                 left: glare.left,
                 top: glare.top,
                 zIndex: 25,
-                width: '65vw',
-                // Constant fast velocity, but takes longer to be covered by clouds
-                transform: `translateY(${globalProgress * -15000}px) scale(${glare.scale})`,
+                width: '120vw', // Larger glares for mobile
+                transform: `translateY(${globalProgress * -8000}px) scale(${glare.scale})`,
                 opacity: 1.0
               }}
             >
@@ -236,56 +260,37 @@ export default function HeroParallax() {
                 priority
                 className="w-full h-auto"
               />
-              <div className="absolute inset-0 translate-x-[-8%] translate-y-[8%] opacity-70">
-                <Image
-                  src="/images/cityglare5.webp"
-                  alt=""
-                  width={800}
-                  height={800}
-                  priority
-                  className="w-full h-auto"
-                />
-              </div>
             </div>
           ))}
 
           {layers.map((layer) => (
             <div
               key={layer.src}
-              className="absolute inset-0 w-full h-full"
+              className="absolute top-[10vh] left-[-25%] w-[150%] md:left-[-15%] md:w-[130%]"
               style={{
                 zIndex: layer.z,
                 transform: `translateY(${globalProgress * layer.speed * 400}px) scale(${1 + globalProgress * 0.15})`,
               }}
             >
-              <img src={layer.src} alt="" className="w-full h-full object-cover object-top" fetchPriority="high" loading="eager" />
+              <img src={layer.src} alt="" className="w-full h-auto block object-cover object-top" fetchPriority="high" loading="eager" />
             </div>
           ))}
         </div>
 
-        {/* 2. PROGRESSIVE HYBRID CLOUD PILLAR */}
         <div
-          className="absolute top-[75%] left-0 w-full z-30 flex flex-col items-center"
+          className="absolute top-[50vh] left-0 w-full z-30 flex flex-col items-center"
           style={{
-            // velocity remains 4.5px for the cinematic feel
             transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(1)`,
             opacity: cloudOpacity
           }}
         >
           <div className="w-full flex flex-col items-center">
             {cloudGroups.map((group, index) => {
-              // Pick cycles: each group slot gets a unique variant from the 6 available.
-              // The variants are ultra-wide (~5:1) vs the old 16:9 clouds.
-              // We lock every slot to 16:9 height (56.25vw) using aspect-video + object-cover
-              // so the layout geometry is identical to what the old cloud_up/down produced.
               const pick = (offset: number) =>
                 `/images/cloud_variant_${((index * 2 + offset) % 6) + 1}.webp`;
 
-              // Shared wrapper: locks rendered height to 56.25vw (= original 1920×1080 at 100vw)
-              // We use flex centering and allow the wide images to overflow the screen horizontally
-              // This prevents the sharp clipping edges when translated.
               const CloudSlot = ({ src, className = "" }: { src: string; className?: string }) => (
-                <div className={`relative w-full h-[56.25vw] flex justify-center items-center ${className}`}>
+                <div className={`relative w-full h-[120vw] flex justify-center items-center ${className}`}>
                   <img src={src} alt="" className="h-full w-auto max-w-none pointer-events-none" loading="lazy" fetchPriority="low" />
                 </div>
               );
@@ -295,22 +300,15 @@ export default function HeroParallax() {
                   key={index}
                   className={`relative w-full ${index > 0 ? group.margin : ""}`}
                 >
-                  {/* Base layer */}
                   <CloudSlot src={pick(0)} />
-
-                  {/* Overlay layer — flipped horizontally */}
                   <div className="absolute inset-0 w-full h-full opacity-95 scale-x-[-1]">
                     <CloudSlot src={pick(1)} />
                   </div>
-
-                  {/* 3rd layer (groups with count ≥ 3) */}
                   {group.count >= 3 && (
                     <div className="absolute inset-0 w-full h-full opacity-90 translate-x-[5%] -translate-y-[3%]">
                       <CloudSlot src={pick(2)} />
                     </div>
                   )}
-
-                  {/* 4th layer (groups with count === 4) — flipped */}
                   {group.count === 4 && (
                     <div className="absolute inset-0 w-full h-full opacity-85 -translate-x-[5%] translate-y-[3%] scale-x-[-1]">
                       <CloudSlot src={pick(3)} />
@@ -319,7 +317,6 @@ export default function HeroParallax() {
                 </div>
               );
             })}
-
             <div
               className="w-full h-[100vh] bg-[#0B1D32] -mt-[60vw]"
               style={{ zIndex: -1 }}
@@ -327,9 +324,8 @@ export default function HeroParallax() {
           </div>
         </div>
 
-        {/* 3. NAYA & CIRCLES */}
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[1vw]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 -mt-[10vh]"
           style={{
             transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
             opacity: nayaOpacity
@@ -340,7 +336,7 @@ export default function HeroParallax() {
             alt=""
             width={1865}
             height={562}
-            className="absolute w-[120%] max-w-none h-auto"
+            className="absolute w-[180%] max-w-none h-auto"
             style={{
               opacity: 0.6 + (nayaProgress * 0.4)
             }}
@@ -350,16 +346,13 @@ export default function HeroParallax() {
             alt="Naya"
             width={1200}
             height={1697}
-            className="relative w-[55%] max-w-[800px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.8)]"
+            className="relative w-[85%] max-w-[500px] h-auto z-10 drop-shadow-[0_45px_45px_rgba(0,0,0,0.8)]"
             style={{
               transform: `translateY(${globalProgress * -150}px)`,
             }}
           />
         </div>
-
       </div>
-      {/* 5. PADDING SPACER - Prevents overlap with portfolio content */}
-
     </div>
   );
 }

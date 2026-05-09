@@ -2,8 +2,8 @@
 
 export const runtime = 'edge';
 
-import { useState, useEffect } from 'react';
-import { Upload, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle, ChevronLeft, Edit, Trash2, Settings2, PlusCircle, X } from 'lucide-react';
+import { useState, useEffect, useMemo } from 'react';
+import { Upload, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle, ChevronLeft, Edit, Trash2, Settings2, PlusCircle, X, RefreshCw } from 'lucide-react';
 import Link from 'next/link';
 import { uploadImage } from '../actions/upload';
 import { savePortfolioGroup, getAllPortfolioGroups, deletePortfolioGroup, updatePortfolioGroup } from '../actions/portfolio';
@@ -140,6 +140,195 @@ export default function AdminDashboard() {
   const removeNewImage = (index: number) => {
     setGallery(prev => prev.filter((_, i) => i !== index));
   };
+
+  const [isBulkConverting, setIsBulkConverting] = useState(false);
+
+  const handleBulkConvert = async () => {
+    const allItems = [
+      { id: 'Cover Image', url: existingCoverImage },
+      ...existingGallery.map((url, i) => ({ id: `Gallery Item ${i + 1}`, url }))
+    ].filter(item => item.url && !item.url.startsWith('data:'));
+
+    const needsOptimization = allItems.filter(item => {
+      const url = item.url.toLowerCase();
+      if (isVideo(url)) return !url.endsWith('.webm');
+      return !url.endsWith('.webp');
+    });
+
+    if (needsOptimization.length === 0) {
+      setStatus({ type: 'success', message: '✨ All media in this collection is already optimized!' });
+      setTimeout(() => setStatus(null), 3000);
+      return;
+    }
+
+    if (!confirm(`Found ${needsOptimization.length} items to optimize. This will replace them with WebP/WebM versions and delete the originals. Continue?`)) return;
+    
+    setIsBulkConverting(true);
+    const results = { success: 0, failed: 0, skipped: 0, errors: [] as string[] };
+    
+    try {
+      for (const item of needsOptimization) {
+        const url = item.url;
+        const isVid = isVideo(url);
+        
+        setStatus({ 
+          type: 'success', 
+          message: `🔄 [${results.success + results.failed + 1}/${needsOptimization.length}] Processing ${item.id}...` 
+        });
+        
+        try {
+          let finalBlob: Blob;
+          let finalExt = 'webp';
+
+          if (isVid) {
+            setStatus({ type: 'success', message: `🎥 [${results.success + results.failed + 1}/${needsOptimization.length}] Recording ${item.id}... 0%` });
+            
+            finalBlob = await new Promise<Blob>((resolve, reject) => {
+              const video = document.createElement('video');
+              video.crossOrigin = 'anonymous';
+              video.src = `/api/proxy?url=${encodeURIComponent(url)}`;
+              video.muted = true;
+              video.playsInline = true;
+              
+              // We need to put it in the DOM (hidden) for some browsers to capture stream
+              const container = document.createElement('div');
+              container.style.cssText = 'position:fixed; top:-9999px; width:640px; height:360px; pointer-events:none;';
+              container.appendChild(video);
+              document.body.appendChild(container);
+
+              video.onloadedmetadata = () => {
+                try {
+                  // Use native video dimensions for best quality
+                  container.style.width = `${video.videoWidth}px`;
+                  container.style.height = `${video.videoHeight}px`;
+
+                  const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream();
+                  
+                  // Request high quality (5Mbps target)
+                  const recorder = new MediaRecorder(stream, { 
+                    mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+                    videoBitsPerSecond: 5000000 
+                  });
+                  const chunks: Blob[] = [];
+                  
+                  recorder.ondataavailable = (e) => chunks.push(e.data);
+                  recorder.onstop = () => {
+                    const blob = new Blob(chunks, { type: 'video/webm' });
+                    document.body.removeChild(container);
+                    resolve(blob);
+                  };
+
+                  video.onended = () => recorder.stop();
+                  video.ontimeupdate = () => {
+                    const prog = Math.round((video.currentTime / video.duration) * 100);
+                    setStatus({ type: 'success', message: `🎥 [${results.success + results.failed + 1}/${needsOptimization.length}] Recording ${item.id}... ${prog}%` });
+                  };
+
+                  recorder.start();
+                  video.play();
+                } catch (e) {
+                  document.body.removeChild(container);
+                  reject(e);
+                }
+              };
+              video.onerror = () => {
+                document.body.removeChild(container);
+                reject(new Error('Failed to load video for recording'));
+              };
+            });
+            finalExt = 'webm';
+          } else {
+            // IMAGE PATH
+            const response = await fetch(`/api/proxy?url=${encodeURIComponent(url)}`);
+            if (!response.ok) throw new Error(`Fetch failed (Proxy Error)`);
+            const blob = await response.blob();
+
+            finalBlob = await new Promise<Blob>((resolve, reject) => {
+              const img = new (window as any).Image();
+              img.crossOrigin = "anonymous";
+              const objectUrl = URL.createObjectURL(blob);
+              img.onload = () => {
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                if (!ctx) { reject(new Error('Canvas Context Error')); return; }
+                ctx.drawImage(img, 0, 0);
+                canvas.toBlob(b => {
+                  if (b) resolve(b);
+                  else reject(new Error('WebP Compression Failed'));
+                  URL.revokeObjectURL(objectUrl);
+                }, 'image/webp', 0.9);
+              };
+              img.onerror = () => {
+                URL.revokeObjectURL(objectUrl);
+                reject(new Error('Image processing failed'));
+              };
+              img.src = objectUrl;
+            });
+          }
+
+          // 3. Upload
+          const formData = new FormData();
+          const fileName = url.split('/').pop()?.split('?')[0] || 'media';
+          const baseName = fileName.substring(0, fileName.lastIndexOf('.')) || fileName;
+          formData.append('file', new File([finalBlob], `${baseName}.${finalExt}`, { type: isVid ? 'video/webm' : 'image/webp' }));
+
+          const uploadFetch = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (!uploadFetch.ok) throw new Error('Cloud Upload Failed');
+          const { url: newUrl } = await uploadFetch.json();
+
+          // 4. Replace in DB & R2 Cleanup
+          const replaceFetch = await fetch('/api/image/replace', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ oldUrl: url, newUrl }),
+          });
+          
+          if (!replaceFetch.ok) {
+            const errorData = await replaceFetch.json() as any;
+            throw new Error(`Database Sync Failed: ${errorData.error || replaceFetch.statusText}`);
+          }
+
+          handleImageConverted(url, newUrl);
+          results.success++;
+        } catch (err: any) {
+          console.error(`Error processing ${item.id}:`, err);
+          results.failed++;
+          results.errors.push(`❌ ${item.id}: ${err.message}`);
+        }
+      }
+
+      // Final Report
+      const summary = `Optimization Finished: ${results.success} Success, ${results.failed} Failed.`;
+      if (results.errors.length > 0) {
+        setStatus({ 
+          type: results.success > 0 ? 'success' : 'error', 
+          message: `${summary}\n\n• ${results.errors.join('\n• ')}` 
+        });
+      } else {
+        setStatus({ type: 'success', message: `✅ ${summary}` });
+        setTimeout(() => setStatus(null), 5000);
+      }
+    } catch (err: any) {
+      setStatus({ type: 'error', message: `Critical Failure: ${err.message}` });
+    } finally {
+      setIsBulkConverting(false);
+    }
+  };
+
+  const unconvertedCount = useMemo(() => {
+    const allItems = [
+      existingCoverImage,
+      ...existingGallery
+    ].filter(url => url && typeof url === 'string' && !url.startsWith('data:'));
+
+    return allItems.filter(url => {
+      const u = url.toLowerCase();
+      if (isVideo(u)) return !u.endsWith('.webm');
+      return !u.endsWith('.webp');
+    }).length;
+  }, [existingCoverImage, existingGallery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -458,11 +647,23 @@ export default function AdminDashboard() {
               </div>
             )}
 
-            <div className="flex gap-4">
-              <button type="submit" disabled={isUploading} className="flex-1 h-16 bg-[#48ABBF] hover:bg-[#5bc0d4] disabled:opacity-50 text-[#051C30] font-bold text-lg rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3">
+            <div className="flex flex-wrap gap-4">
+              <button type="submit" disabled={isUploading || isBulkConverting} className="flex-1 h-16 bg-[#48ABBF] hover:bg-[#5bc0d4] disabled:opacity-50 text-[#051C30] font-bold text-lg rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3">
                 {isUploading ? <Loader2 className="animate-spin" /> : editingId ? <CheckCircle2 size={20}/> : <Upload size={20}/>}
                 {editingId ? 'Save Changes' : 'Create Collection'}
               </button>
+
+              {editingId && unconvertedCount > 0 && (
+                <button 
+                  type="button" 
+                  disabled={isUploading || isBulkConverting}
+                  onClick={handleBulkConvert}
+                  className="px-6 h-16 bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold rounded-2xl transition-all flex items-center gap-3 disabled:opacity-30"
+                >
+                  {isBulkConverting ? <Loader2 className="animate-spin" size={18} /> : <RefreshCw size={18} />}
+                  Convert All ({unconvertedCount})
+                </button>
+              )}
               
               {editingId && (
                 <button 

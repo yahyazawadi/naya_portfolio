@@ -13,6 +13,8 @@ const layers = [
 // Doubled glare instances for high-density bokeh sky
 const glareLayers = [
   // Upper section
+  { left: '2%', top: '2%', scale: 0.8, opacity: 0.4 },
+  { left: '15%', top: '12%', scale: 0.7, opacity: 0.3 },
   { left: '10%', top: '5%', scale: 0.9, opacity: 0.5 },
   { left: '40%', top: '15%', scale: 0.9, opacity: 0.3 },
   { left: '70%', top: '10%', scale: 0.5, opacity: 0.6 },
@@ -224,7 +226,7 @@ export default function HeroParallax() {
                 zIndex: 25,
                 width: '65vw',
                 // Constant fast velocity, but takes longer to be covered by clouds
-                transform: `translateY(${globalProgress * -15000}px) scale(${glare.scale})`,
+                transform: `translateY(${globalProgress * -15000}px) scale(${glare.scale * 0.85})`,
                 opacity: 1.0
               }}
             >
@@ -268,7 +270,7 @@ export default function HeroParallax() {
           className="absolute top-[75%] left-0 w-full z-30 flex flex-col items-center"
           style={{
             // velocity remains 4.5px for the cinematic feel
-            transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(1)`,
+            transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(0.85)`,
             opacity: cloudOpacity
           }}
         >
@@ -329,9 +331,9 @@ export default function HeroParallax() {
 
         {/* 3. NAYA & CIRCLES */}
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[1vw]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[8vh]"
           style={{
-            transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
+            transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${(1 + globalProgress * 0.1) * 0.85})`,
             opacity: nayaOpacity
           }}
         >

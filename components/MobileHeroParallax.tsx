@@ -9,6 +9,8 @@ const layers = [
 
 // Increased glare scale and opacity for a bloomy white/sunshine look
 const glareLayers = [
+  { left: '2%', top: '2%', scale: 1.4, opacity: 0.7 },
+  { left: '18%', top: '12%', scale: 1.2, opacity: 0.6 },
   { left: '10%', top: '5%', scale: 1.5, opacity: 0.8 },
   { left: '60%', top: '15%', scale: 1.2, opacity: 0.7 },
   { left: '25%', top: '30%', scale: 1.8, opacity: 0.8 },
@@ -248,7 +250,7 @@ export default function MobileHeroParallax() {
                 top: glare.top,
                 zIndex: 25,
                 width: '120vw', // Larger glares for mobile
-                transform: `translateY(${globalProgress * -8000}px) scale(${glare.scale})`,
+                transform: `translateY(${globalProgress * -8000}px) scale(${glare.scale * 0.85})`,
                 opacity: 1.0
               }}
             >
@@ -280,7 +282,7 @@ export default function MobileHeroParallax() {
         <div
           className="absolute top-[50vh] left-0 w-full z-30 flex flex-col items-center"
           style={{
-            transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(1)`,
+            transform: `translateY(-${cloudActiveScroll * 4.5}px) scale(0.85)`,
             opacity: cloudOpacity
           }}
         >
@@ -325,9 +327,9 @@ export default function MobileHeroParallax() {
         </div>
 
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-0 -mt-[10vh]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[5vh]"
           style={{
-            transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${1 + globalProgress * 0.1})`,
+            transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${(1 + globalProgress * 0.1) * 0.85})`,
             opacity: nayaOpacity
           }}
         >

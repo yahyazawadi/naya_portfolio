@@ -30,17 +30,16 @@ export async function POST(request: NextRequest) {
     console.log(`[Image Replace] Replacing ${oldUrl} with ${newUrl}`);
 
     // 2. Update Database (Search and Replace in JSON and columns)
-    // We update cover_image and images (which is a JSON string)
-    // Using D1 SQL REPLACE function
+    // Using INSTR instead of LIKE to avoid "pattern too complex" errors with long URLs
     await db.prepare(`
       UPDATE portfolio_groups 
       SET 
         cover_image = REPLACE(cover_image, ?, ?),
         images = REPLACE(images, ?, ?)
       WHERE 
-        cover_image LIKE ? OR images LIKE ?
+        INSTR(cover_image, ?) > 0 OR INSTR(images, ?) > 0
     `)
-    .bind(oldUrl, newUrl, oldUrl, newUrl, `%${oldUrl}%`, `%${oldUrl}%`)
+    .bind(oldUrl, newUrl, oldUrl, newUrl, oldUrl, oldUrl)
     .run();
 
     // 3. Delete old asset from R2

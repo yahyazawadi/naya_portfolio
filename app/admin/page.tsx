@@ -333,6 +333,12 @@ export default function AdminDashboard() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (isUploading || isBulkConverting) return;
+
+    // Validation for new collections
+    if (!editingId && (!thumbnail || gallery.length === 0 || !title)) {
+      setStatus({ type: 'error', message: 'Please provide a title, cover image, and at least one gallery item.' });
+      return;
+    }
     
     setIsUploading(true);
     setProgress(0);
@@ -465,6 +471,19 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleAddNew = () => {
+    setEditingId(null);
+    setTitle('');
+    setDescription('');
+    setCategory('digital-art');
+    setThumbnail(null);
+    setExistingCoverImage('');
+    setGallery([]);
+    setExistingGallery([]);
+    setStatus(null);
+    setActiveTab('upload');
+  };
+
   return (
     <div className="min-h-screen bg-[#051C30] text-white p-6 md:p-12 lg:p-20 font-sans">
       <div className="max-w-6xl mx-auto">
@@ -491,8 +510,8 @@ export default function AdminDashboard() {
 
           <div className="flex p-1 bg-[#0F314D] rounded-2xl border border-white/5">
             <button 
-              onClick={() => { setActiveTab('upload'); setEditingId(null); }}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-medium ${activeTab === 'upload' ? 'bg-[#48ABBF] text-[#051C30]' : 'text-white/60 hover:text-white'}`}
+              onClick={handleAddNew}
+              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-medium ${(activeTab === 'upload' && !editingId) ? 'bg-[#48ABBF] text-[#051C30]' : 'text-white/60 hover:text-white'}`}
             >
               <PlusCircle size={18} />
               Add New
@@ -714,63 +733,114 @@ export default function AdminDashboard() {
             </div>
           </form>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
-            {isLoadingItems ? (
-              <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/40">
-                <Loader2 className="animate-spin mb-4" size={40} />
-                <p>Retrieving database records...</p>
-              </div>
-            ) : existingItems.length === 0 ? (
-              <div className="col-span-full py-20 text-center text-white/40 bg-[#0F314D]/20 rounded-3xl border border-dashed border-white/5">
-                <ImageIcon size={48} className="mx-auto mb-4 opacity-20" />
-                <p>The portfolio is empty. Add your first masterpiece!</p>
-              </div>
-            ) : (
-              existingItems.map(item => (
-                <div key={item.id} className="group bg-[#0F314D]/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col hover:border-[#48ABBF]/30 transition-all duration-300">
-                  <div className="relative h-48">
-                    {isVideo(item.coverImage) ? (
-                      <video src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
-                    ) : (
-                      <SmartImage 
-                        src={item.coverImage} 
-                        className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" 
-                        alt="" 
-                        onConverted={(newUrl) => handleImageConverted(item.coverImage, newUrl)}
-                      />
-                    )}
-                    <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
-                      <button onClick={() => handleEdit(item)} className="p-2.5 bg-black/60 hover:bg-[#48ABBF] hover:text-black rounded-xl backdrop-blur-md transition-all shadow-xl">
-                        <Edit size={18} />
-                      </button>
-                      <button onClick={() => handleDelete(item)} className="p-2.5 bg-black/60 hover:bg-red-500 rounded-xl backdrop-blur-md transition-all shadow-xl">
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                    <div className="absolute bottom-4 left-4">
-                       <span className="bg-[#48ABBF] text-[#051C30] text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider shadow-lg">
-                         {categories.find(c => c.id === item.category)?.label || item.category}
-                       </span>
-                    </div>
-                  </div>
-                  <div className="p-6 flex-1 flex flex-col bg-gradient-to-b from-transparent to-[#0F314D]/20">
-                    <h3 className="font-bold text-xl mb-2 line-clamp-1 group-hover:text-[#48ABBF] transition-colors">{item.title}</h3>
-                    <p className="text-white/50 text-sm line-clamp-2 mb-4 flex-1 leading-relaxed">{item.description}</p>
-                    <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                      <div className="text-[10px] text-[#48ABBF] uppercase tracking-widest font-bold">
-                        {item.images?.length || 0} Assets
-                      </div>
-                      <div className="text-[10px] text-white/20 font-mono">
-                        ID: {item.id}
-                      </div>
-                    </div>
-                  </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-fadeIn">
+              {isLoadingItems ? (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/40">
+                  <Loader2 className="animate-spin mb-4" size={40} />
+                  <p>Retrieving database records...</p>
                 </div>
-              ))
+              ) : existingItems.length === 0 ? (
+                <div className="col-span-full py-20 text-center text-white/40 bg-[#0F314D]/20 rounded-3xl border border-dashed border-white/5">
+                  <ImageIcon size={48} className="mx-auto mb-4 opacity-20" />
+                  <p>The portfolio is empty. Add your first masterpiece!</p>
+                </div>
+              ) : (
+                existingItems.map(item => (
+                  <div key={item.id} className="group bg-[#0F314D]/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col hover:border-[#48ABBF]/30 transition-all duration-300">
+                    <div className="relative h-48">
+                      {isVideo(item.coverImage) ? (
+                        <video src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
+                      ) : (
+                        <SmartImage 
+                          src={item.coverImage} 
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" 
+                          alt="" 
+                          onConverted={(newUrl) => handleImageConverted(item.coverImage, newUrl)}
+                        />
+                      )}
+                      <div className="absolute top-4 right-4 flex gap-2 translate-y-2 opacity-0 group-hover:translate-y-0 group-hover:opacity-100 transition-all duration-300">
+                        <button onClick={() => handleEdit(item)} className="p-2.5 bg-black/60 hover:bg-[#48ABBF] hover:text-black rounded-xl backdrop-blur-md transition-all shadow-xl">
+                          <Edit size={18} />
+                        </button>
+                        <button onClick={() => handleDelete(item)} className="p-2.5 bg-black/60 hover:bg-red-500 rounded-xl backdrop-blur-md transition-all shadow-xl">
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                      <div className="absolute bottom-4 left-4">
+                         <span className="bg-[#48ABBF] text-[#051C30] text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider shadow-lg">
+                           {categories.find(c => c.id === item.category)?.label || item.category}
+                         </span>
+                      </div>
+                    </div>
+                    <div className="p-6 flex-1 flex flex-col bg-gradient-to-b from-transparent to-[#0F314D]/20">
+                      <h3 className="font-bold text-xl mb-2 line-clamp-1 group-hover:text-[#48ABBF] transition-colors">{item.title}</h3>
+                      <p className="text-white/50 text-sm line-clamp-2 mb-4 flex-1 leading-relaxed">{item.description}</p>
+                      <div className="flex items-center justify-between pt-4 border-t border-white/5">
+                        <div className="text-[10px] text-[#48ABBF] uppercase tracking-widest font-bold">
+                          {item.images?.length || 0} Assets
+                        </div>
+                        <div className="text-[10px] text-white/20 font-mono">
+                          ID: {item.id}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            {/* Storage Maintenance Section */}
+            {!isLoadingItems && (
+              <div className="mt-12 pt-12 border-t border-white/10">
+                <div className="bg-[#0F314D]/50 rounded-3xl p-8 border border-white/5 max-w-2xl">
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="p-3 bg-[#48ABBF]/10 rounded-2xl text-[#48ABBF]">
+                      <Settings2 size={24} />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-bold">Storage Maintenance</h3>
+                      <p className="text-white/50 text-sm">Scan and remove unoptimized legacy assets (orphans) from R2.</p>
+                    </div>
+                  </div>
+                  
+                  <button
+                    onClick={async () => {
+                      if (!confirm('This will scan your R2 bucket for files not used in any board. Continue?')) return;
+                      setStatus({ type: 'success', message: '🔍 Scanning R2 bucket for orphaned files...' });
+                      try {
+                        const res = await fetch('/api/admin/cleanup');
+                        const data = await res.json() as { count: number, orphans: string[] };
+                        if (data.count > 0) {
+                          if (confirm(`Found ${data.count} orphaned files. Delete them all?`)) {
+                            const delRes = await fetch('/api/admin/cleanup', {
+                              method: 'POST',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ keys: data.orphans })
+                            });
+                            const delData = await delRes.json() as { deletedCount: number };
+                            setStatus({ type: 'success', message: `✨ Successfully deleted ${delData.deletedCount} legacy files!` });
+                          } else {
+                            setStatus(null);
+                          }
+                        } else {
+                          setStatus({ type: 'success', message: '✅ Your storage is clean! No orphaned files found.' });
+                        }
+                      } catch (e) {
+                        setStatus({ type: 'error', message: 'Cleanup failed. Check console for details.' });
+                      }
+                    }}
+                    className="px-6 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-all text-xs font-bold tracking-widest uppercase"
+                  >
+                    Scan & Deep Clean Storage
+                  </button>
+                </div>
+              </div>
             )}
-          </div>
+          </>
         )}
       </div>
     </div>
   );
 }
+

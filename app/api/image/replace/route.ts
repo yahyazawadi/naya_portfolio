@@ -42,43 +42,40 @@ export async function POST(request: NextRequest) {
     .bind(oldUrl, newUrl, oldUrl, newUrl, oldUrl, oldUrl)
     .run();
 
-    // 3. Delete old asset from R2
+    // 3. Delete old asset from R2/S3
     try {
-      // Extract key from oldUrl
-      const urlParts = oldUrl.split('/');
-      const key = urlParts[urlParts.length - 1];
-
-      const isDev = process.env.NODE_ENV === 'development';
+      const urlObj = new URL(oldUrl);
+      const key = decodeURIComponent(urlObj.pathname.substring(1));
       
-      if (!isDev) {
-        const bucket = env.BUCKET as any;
+      if (key) {
+        // Try R2 Binding first
+        const bucket = (env.BUCKET || (env as any).R2_BUCKET);
         if (bucket && typeof bucket.delete === 'function') {
           console.log(`[Image Replace] Deleting from R2 Binding: ${key}`);
           await bucket.delete(key);
         }
+
+        // S3 Fallback
+        const s3Config = {
+          region: "auto",
+          endpoint: (env.R2_ENDPOINT || process.env.R2_ENDPOINT) as string,
+          credentials: {
+            accessKeyId: (env.R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '') as string,
+            secretAccessKey: (env.R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || '') as string,
+          },
+        };
+
+        const s3 = new S3Client(s3Config);
+        const deleteCommand = new DeleteObjectCommand({
+          Bucket: (env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME) as string,
+          Key: key,
+        });
+
+        await s3.send(deleteCommand);
+        console.log(`[Image Replace] Deleted from S3 API: ${key}`);
       }
-
-      // S3 Fallback Delete
-      const s3Config = {
-        region: "auto",
-        endpoint: (env.R2_ENDPOINT || process.env.R2_ENDPOINT) as string,
-        credentials: {
-          accessKeyId: (env.R2_ACCESS_KEY_ID || process.env.R2_ACCESS_KEY_ID || '') as string,
-          secretAccessKey: (env.R2_SECRET_ACCESS_KEY || process.env.R2_SECRET_ACCESS_KEY || '') as string,
-        },
-      };
-
-      const s3 = new S3Client(s3Config);
-      const deleteCommand = new DeleteObjectCommand({
-        Bucket: (env.R2_BUCKET_NAME || process.env.R2_BUCKET_NAME) as string,
-        Key: key,
-      });
-
-      await s3.send(deleteCommand);
-      console.log(`[Image Replace] Deleted old asset: ${key}`);
     } catch (deleteErr: any) {
-      console.warn("[Image Replace] Asset deletion failed (might be expected if file doesn't exist):", deleteErr.message);
-      // We don't fail the whole request if deletion fails, as the DB is already updated
+      console.warn("[Image Replace] Asset deletion warning:", deleteErr.message);
     }
 
     return NextResponse.json({ success: true });

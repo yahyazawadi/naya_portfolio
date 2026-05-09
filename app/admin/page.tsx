@@ -276,7 +276,7 @@ export default function AdminDashboard() {
 
           const uploadFetch = await fetch('/api/upload', { method: 'POST', body: formData });
           if (!uploadFetch.ok) throw new Error('Cloud Upload Failed');
-          const { url: newUrl } = await uploadFetch.json();
+          const { url: newUrl } = await uploadFetch.json() as { url: string };
 
           // 4. Replace in DB & R2 Cleanup
           const replaceFetch = await fetch('/api/image/replace', {
@@ -332,97 +332,134 @@ export default function AdminDashboard() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isUploading || isBulkConverting) return;
     
-    // Validation
-    const hasExistingContent = editingId && (existingCoverImage || thumbnail);
-    const hasNewContent = thumbnail || gallery.length > 0 || title;
-    
-    if (!editingId && (!thumbnail || gallery.length === 0 || !title)) {
-      setStatus({ type: 'error', message: 'Please fill in all fields and select images.' });
-      return;
-    }
-
     setIsUploading(true);
+    setProgress(0);
     setStatus(null);
-    setProgress(5);
 
     try {
+      const optimizeFile = async (file: File, label: string): Promise<File> => {
+        const isVid = file.type.startsWith('video/');
+        const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
+        
+        if (isVid) {
+          setStatus({ type: 'success', message: `🎬 Optimizing ${label}... 0%` });
+          const blob = await new Promise<Blob>((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const video = document.createElement('video');
+            video.src = url;
+            video.muted = true;
+            video.playsInline = true;
+            const container = document.createElement('div');
+            container.style.cssText = 'position:fixed; top:-9999px; pointer-events:none;';
+            container.appendChild(video);
+            document.body.appendChild(container);
+
+            video.onloadedmetadata = () => {
+              container.style.width = `${video.videoWidth}px`;
+              container.style.height = `${video.videoHeight}px`;
+              const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream();
+              const recorder = new MediaRecorder(stream, { 
+                mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
+                videoBitsPerSecond: 5000000 
+              });
+              const chunks: Blob[] = [];
+              recorder.ondataavailable = (e) => chunks.push(e.data);
+              recorder.onstop = () => {
+                document.body.removeChild(container);
+                URL.revokeObjectURL(url);
+                resolve(new Blob(chunks, { type: 'video/webm' }));
+              };
+              video.onended = () => recorder.stop();
+              video.ontimeupdate = () => {
+                const p = Math.round((video.currentTime / video.duration) * 100);
+                setStatus({ type: 'success', message: `🎬 Optimizing ${label}... ${p}%` });
+              };
+              recorder.start();
+              video.play();
+            };
+            video.onerror = () => {
+              document.body.removeChild(container);
+              URL.revokeObjectURL(url);
+              reject(new Error(`Failed to load ${label} for optimization`));
+            };
+          });
+          return new File([blob], `${baseName}.webm`, { type: 'video/webm' });
+        } else {
+          setStatus({ type: 'success', message: `🖼️ Optimizing ${label}...` });
+          const blob = await new Promise<Blob>((resolve, reject) => {
+            const url = URL.createObjectURL(file);
+            const img = new (window as any).Image();
+            img.onload = () => {
+              const canvas = document.createElement('canvas');
+              canvas.width = img.width;
+              canvas.height = img.height;
+              const ctx = canvas.getContext('2d');
+              if (!ctx) return reject(new Error('Canvas context error'));
+              ctx.drawImage(img, 0, 0);
+              canvas.toBlob(b => {
+                URL.revokeObjectURL(url);
+                if (b) resolve(b);
+                else reject(new Error('WebP conversion failed'));
+              }, 'image/webp', 0.9);
+            };
+            img.onerror = () => {
+              URL.revokeObjectURL(url);
+              reject(new Error('Image processing failed'));
+            };
+            img.src = url;
+          });
+          return new File([blob], `${baseName}.webp`, { type: 'image/webp' });
+        }
+      };
+
       let finalCoverImage = existingCoverImage;
       let finalGallery = [...existingGallery];
 
-      // 1. Upload new Thumbnail if selected
       if (thumbnail) {
-        const thumbFormData = new FormData();
-        thumbFormData.append('file', thumbnail);
-        const thumbFetch = await fetch('/api/upload', { method: 'POST', body: thumbFormData });
-        
-        if (!thumbFetch.ok) {
-          const errData = (await thumbFetch.json().catch(() => ({}))) as { error?: string };
-          throw new Error(errData.error || `Thumbnail upload failed (${thumbFetch.status})`);
-        }
-        
-        const thumbRes = (await thumbFetch.json()) as { url: string };
-        finalCoverImage = thumbRes.url;
-        setProgress(20);
+        const optimized = await optimizeFile(thumbnail, 'Cover Image');
+        const formData = new FormData();
+        formData.append('file', optimized);
+        const res = await fetch('/api/upload', { method: 'POST', body: formData });
+        if (!res.ok) throw new Error('Cover upload failed');
+        const data = await res.json() as { url: string };
+        finalCoverImage = data.url;
+        setProgress(10);
       }
 
-      // 2. Upload new Gallery Images
       if (gallery.length > 0) {
-        const totalToUpload = gallery.length;
-        for (let i = 0; i < totalToUpload; i++) {
+        for (let i = 0; i < gallery.length; i++) {
+          const optimized = await optimizeFile(gallery[i], `Gallery ${i + 1}`);
           const formData = new FormData();
-          formData.append('file', gallery[i]);
-          
-          const uploadFetch = await fetch('/api/upload', { method: 'POST', body: formData });
-          
-          if (!uploadFetch.ok) {
-            const errData = (await uploadFetch.json().catch(() => ({}))) as { error?: string };
-            throw new Error(`Gallery image ${i+1} failed: ${errData.error || uploadFetch.status}`);
-          }
-          
-          const res = (await uploadFetch.json()) as { url: string };
-          finalGallery.push(res.url);
-          setProgress(20 + Math.floor(((i + 1) / totalToUpload) * 70));
+          formData.append('file', optimized);
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error(`Gallery upload ${i + 1} failed`);
+          const data = await res.json() as { url: string };
+          finalGallery.push(data.url);
+          setProgress(10 + Math.floor(((i + 1) / gallery.length) * 80));
         }
       }
 
-      // 3. Save or Update
-      if (editingId) {
-        const res = await updatePortfolioGroup(editingId, {
-          category,
-          title,
-          description,
-          coverImage: finalCoverImage,
-          images: finalGallery,
-        });
-        if (res.error) throw new Error(res.error);
-        setStatus({ type: 'success', message: 'Collection updated successfully!' });
-      } else {
-        const saveRes = await savePortfolioGroup({
-          category,
-          title,
-          description,
-          coverImage: finalCoverImage,
-          images: finalGallery,
-        });
-        if (saveRes.error) throw new Error(saveRes.error);
-        setStatus({ type: 'success', message: 'New collection added successfully!' });
-      }
+      const portfolioData = { title, description, category, coverImage: finalCoverImage, images: finalGallery };
+      const res = editingId 
+        ? await updatePortfolioGroup(editingId, portfolioData)
+        : await savePortfolioGroup(portfolioData);
 
+      if (res?.error) throw new Error(res.error);
+      
+      setStatus({ type: 'success', message: `✨ Collection ${editingId ? 'updated' : 'created'} and fully optimized!` });
       setProgress(100);
-      
-      // Reset form
-      setTitle('');
-      setDescription('');
-      setThumbnail(null);
-      setExistingCoverImage('');
-      setGallery([]);
-      setExistingGallery([]);
-      setEditingId(null);
-      
-      if (editingId) setTimeout(() => setActiveTab('manage'), 1500);
+
+      if (!editingId) {
+        setTitle(''); setDescription(''); setThumbnail(null); setGallery([]);
+      }
+      setExistingItems(await getAllPortfolioGroups());
+      if (editingId) setTimeout(() => { setEditingId(null); setActiveTab('manage'); }, 2000);
+
     } catch (err: any) {
-      setStatus({ type: 'error', message: err.message || 'Something went wrong' });
+      console.error(err);
+      setStatus({ type: 'error', message: err.message || 'Operation failed' });
     } finally {
       setIsUploading(false);
     }

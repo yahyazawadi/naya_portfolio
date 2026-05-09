@@ -31,6 +31,7 @@ export default function Navbar() {
             <li key={link.href}>
               <Link 
                 href={link.href} 
+                prefetch={false}
                 className={`nav-link ${isDark ? "!text-white hover:!text-[#48ABBF]" : ""}`}
                 onClick={(e) => {
                   if (link.href.startsWith("#")) {
@@ -79,6 +80,7 @@ export default function Navbar() {
             <li key={link.href}>
               <Link
                 href={link.href}
+                prefetch={false}
                 className="mobile-nav-link"
                 onClick={(e) => {
                   if (link.href.startsWith("#")) {

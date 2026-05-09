@@ -70,7 +70,7 @@ export const metadata: Metadata = {
   metadataBase: new URL('https://nayaalkhoury.com'),
 };
 
-import ZoomManager from "../components/ZoomManager";
+
 
 export default function RootLayout({
   children,

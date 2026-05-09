@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -32,8 +31,11 @@ html.hero-step-last .site-logo {
 html.hero-step-last .hamburger-line {
   background-color: white !important;
 }
-.nav-link, .site-logo, .hamburger-line {
-  transition: all 0.4s ease;
+.nav-link, .site-logo {
+  transition: color 0.4s ease, opacity 0.4s ease;
+}
+.hamburger-line {
+  transition: transform 0.4s ease, background-color 0.4s ease, opacity 0.4s ease;
 }
 
 /* ── Image Protection ── */
@@ -68,7 +70,7 @@ img {
   }
   
   .navbar.dark-nav {
-    @apply bg-white/60 lg:bg-white/20;
+    @apply absolute bg-white/60 lg:bg-white/20;
   }
 
   .navbar-inner {

@@ -13,28 +13,37 @@ import { getAllPortfolioGroups } from "../app/actions/portfolio";
  */
 export default function PortfolioPrefetcher() {
   useEffect(() => {
+    // 1. Only run once per browser session to prevent redundant work 
+    // on every page navigation (improves "heavy" navigation feel).
+    if (typeof window !== "undefined" && (window as any)._portfolioPrefetched) {
+      return;
+    }
+
     let isCancelled = false;
 
     const prefetch = async () => {
-      // 1. Wait for window load event if not already loaded
+      // 2. Wait for window load event if not already loaded
       if (document.readyState !== "complete") {
         await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
       }
 
       if (isCancelled) return;
 
-      // 2. Wait an extra 2 seconds to ensure all main page animations and 
-      // critical tasks are finished before we start background fetching.
-      await new Promise((resolve) => setTimeout(resolve, 2000));
+      // 3. Wait an extra 4 seconds (instead of 2) to ensure all main page 
+      // animations and critical tasks are truly finished.
+      await new Promise((resolve) => setTimeout(resolve, 4000));
 
       if (isCancelled) return;
 
       try {
-        // 3. Fetch all portfolio groups (metadata)
+        // 4. Fetch all portfolio groups (metadata)
         const groups = await getAllPortfolioGroups();
         if (isCancelled) return;
 
-        // 4. Collect all image URLs (Cover images + Gallery images)
+        // Mark as prefetched so it doesn't run again on next navigation
+        (window as any)._portfolioPrefetched = true;
+
+        // 5. Collect all image URLs (Cover images + Gallery images)
         const urls = new Set<string>();
         groups.forEach((group: any) => {
           if (group.coverImage) urls.add(group.coverImage);
@@ -45,8 +54,9 @@ export default function PortfolioPrefetcher() {
 
         const urlList = Array.from(urls);
 
-        // 5. Prefetch assets in small chunks to avoid network congestion
-        const chunkSize = 4;
+        // 6. Prefetch assets in smaller chunks to avoid network saturation
+        // Slower chunking = smoother main thread during navigation
+        const chunkSize = 2; // Reduced from 4
         const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
         
         for (let i = 0; i < urlList.length; i += chunkSize) {
@@ -66,20 +76,19 @@ export default function PortfolioPrefetcher() {
                 } else {
                   const img = new Image();
                   img.onload = resolve;
-                  img.onerror = resolve; // Move on even if one fails
+                  img.onerror = resolve;
                   img.src = url;
                 }
               });
             })
           );
           
-          // Tiny breath between chunks
-          await new Promise((resolve) => setTimeout(resolve, 200));
+          // Longer breath between chunks (500ms instead of 200ms)
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
 
         console.log(`[Prefetcher] Successfully cached ${urlList.length} portfolio assets.`);
       } catch (error) {
-        // Silently fail as this is a non-critical background task
         console.warn("[Prefetcher] Silent prefetch failed:", error);
       }
     };

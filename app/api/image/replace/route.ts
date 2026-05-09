@@ -6,7 +6,8 @@ export const runtime = 'edge';
 
 export async function POST(request: NextRequest) {
   try {
-    const { oldUrl, newUrl } = await request.json();
+    const body = await request.json() as { oldUrl?: string; newUrl?: string };
+    const { oldUrl, newUrl } = body;
 
     if (!oldUrl || !newUrl) {
       return NextResponse.json({ error: "Missing oldUrl or newUrl" }, { status: 400 });

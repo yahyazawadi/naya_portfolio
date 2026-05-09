@@ -82,7 +82,7 @@ img {
 
   .site-logo {
     font-family: var(--font-marck-script), cursive;
-    @apply text-[32px] md:text-[42px] leading-tight text-[#18667D] no-underline whitespace-nowrap -mt-1;
+    @apply text-[36px] md:text-[48px] leading-tight text-[#18667D] no-underline whitespace-nowrap -mt-1;
   }
 
   .nav-links {
@@ -90,7 +90,7 @@ img {
   }
 
   .nav-link {
-    @apply font-sans text-[14px] xl:text-[16px] font-normal text-[#48ABBF] no-underline whitespace-nowrap
+    @apply font-sans text-[16px] xl:text-[18px] font-normal text-[#48ABBF] no-underline whitespace-nowrap
            transition-colors duration-200 hover:text-[#18667D];
   }
 
@@ -120,13 +120,13 @@ img {
       @apply px-8 py-6;
     }
     .site-logo {
-      @apply text-[44px];
+      @apply text-[50px];
     }
     .nav-links {
       @apply gap-7;
     }
     .nav-link {
-      @apply text-[16px];
+      @apply text-[17px];
     }
   }
 

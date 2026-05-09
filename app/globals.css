@@ -60,6 +60,18 @@ img {
     overflow-x: hidden;
     position: relative;
     background-color: #0B1D32;
+    
+    /* ── Instant Zoom (No Flicker) ── */
+    zoom: 75%;
+  }
+
+  /* Firefox Fallback (Doesn't support 'zoom') */
+  @-moz-document url-prefix() {
+    body {
+      transform: scale(0.75);
+      transform-origin: top left;
+      width: 133.333% !important;
+    }
   }
 }
 
@@ -70,7 +82,24 @@ img {
   }
   
   .navbar.dark-nav {
-    @apply absolute bg-white/60 lg:bg-white/20;
+    @apply absolute bg-black/20 lg:bg-white/20 backdrop-blur-md;
+  }
+
+  .navbar.dark-nav .site-logo {
+    @apply lg:!text-[#48ABBF];
+  }
+
+  /* Mobile specific overrides for subpages */
+  @media (max-width: 1024px) {
+    .navbar.dark-nav .site-logo {
+      @apply !text-white;
+    }
+    .navbar.dark-nav .hamburger-line {
+      @apply !bg-white;
+    }
+    .navbar.dark-nav .mobile-nav-link {
+      @apply !text-white border-white/20;
+    }
   }
 
   .navbar-inner {

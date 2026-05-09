@@ -22,7 +22,7 @@ export default function Navbar() {
       <div className="navbar-inner">
         {/* Logo */}
         <Link href="/" className="logo-container">
-          <span className={`site-logo ${isDark ? "!text-[#48ABBF]" : ""}`}>Naya Al-Khoury</span>
+          <span className="site-logo">Naya Al-Khoury</span>
         </Link>
 
         {/* Desktop links */}

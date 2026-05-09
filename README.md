@@ -2,6 +2,8 @@
 
 A high-performance, edge-ready portfolio website built with Next.js, Cloudflare R2, and D1.
 
+Updated: May 2026 - Stabilized build pipeline for Next.js 15 and React 19.
+
 ## License
 
 This project is licensed under a free-to-use "Blessing" license for **non-commercial use only**:

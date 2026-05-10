@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "Animation and motion graphics portfolio of Naya Al-Khoury. Featuring projects created with Krita, Adobe Animate, and After Effects.",
 };
 
+// Disabled edge runtime for local dev stability
 // export const runtime = 'edge';
 
 export default async function AnimationPage() {

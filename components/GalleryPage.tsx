@@ -299,48 +299,59 @@ function GroupDetailView({
     }
   };
 
+  // Split images into two columns for an "Ordered Masonry" look
+  // Even indices in left column, Odd indices in right column
+  const leftCol = group.images.filter((_, i) => i % 2 === 0);
+  const rightCol = group.images.filter((_, i) => i % 2 !== 0);
+
+  const renderItem = (item: GalleryItem, originalIndex: number) => (
+    <div
+      key={originalIndex}
+      id={`gallery-item-${originalIndex}`}
+      className="mb-6 md:mb-10 group/tile cursor-zoom-in relative scroll-mt-24"
+    >
+      <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden p-1.5 hover:border-[#48ABBF]/40 transition-colors duration-500 shadow-2xl">
+        <AssetWithFade 
+          src={item.url} 
+          alt={`${group.title} ${originalIndex + 1}`} 
+          className="w-full h-auto object-cover rounded-[2rem] group-hover/tile:scale-[1.02] duration-700 transition-transform" 
+          onConverted={(newUrl) => onConverted(item.url, newUrl)}
+          isPlaying={playingIndex === originalIndex}
+          onEnded={() => handleEnded(originalIndex)}
+        />
+        {(item.date || item.description) && (
+          <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+            {item.date && (
+              <span className="text-[#48ABBF] text-[15px] md:text-[16px] lg:text-[20px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
+                {item.date}
+              </span>
+            )}
+            {item.description && (
+              <p className="text-white text-[20px] md:text-[24px] lg:text-[32px] leading-tight font-black tracking-tight">
+                {item.description}
+              </p>
+            )}
+          </div>
+        )}
+      </div>
+      <div 
+        className="absolute inset-0 z-10" 
+        onClick={() => onImageClick(originalIndex)} 
+      />
+    </div>
+  );
+
   return (
     <div className="w-full animate-fadeIn">
-      <div
-        className="px-8 md:px-16 lg:px-24 py-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start"
-      >
-        {group.images.map((item, i) => (
-          <div
-            key={i}
-            id={`gallery-item-${i}`}
-            className="break-inside-avoid mb-10 group/tile cursor-zoom-in relative scroll-mt-24"
-          >
-            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden p-1.5 hover:border-[#48ABBF]/40 transition-colors duration-500 shadow-2xl">
-              <AssetWithFade 
-                src={item.url} 
-                alt={`${group.title} ${i + 1}`} 
-                className="w-full h-auto object-cover rounded-[2rem] group-hover/tile:scale-[1.02] duration-700 transition-transform" 
-                onConverted={(newUrl) => onConverted(item.url, newUrl)}
-                isPlaying={playingIndex === i}
-                onEnded={() => handleEnded(i)}
-              />
-              {(item.date || item.description) && (
-                <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">
-                  {item.date && (
-                    <span className="text-[#48ABBF] text-[15px] md:text-[16px] lg:text-[20px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
-                      {item.date}
-                    </span>
-                  )}
-                  {item.description && (
-                    <p className="text-white text-[20px] md:text-[24px] lg:text-[32px] leading-tight font-black tracking-tight">
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-            {/* Click overlay to trigger gallery */}
-            <div 
-              className="absolute inset-0 z-10" 
-              onClick={() => onImageClick(i)} 
-            />
-          </div>
-        ))}
+      <div className="px-8 md:px-16 lg:px-24 py-8 flex flex-col md:flex-row gap-6 md:gap-10">
+        {/* Left Column */}
+        <div className="flex-1 flex flex-col">
+          {leftCol.map((item) => renderItem(item, group.images.indexOf(item)))}
+        </div>
+        {/* Right Column */}
+        <div className="flex-1 flex flex-col">
+          {rightCol.map((item) => renderItem(item, group.images.indexOf(item)))}
+        </div>
       </div>
     </div>
   );

@@ -137,9 +137,9 @@ export default function Home() {
         <div className="relative">
           {/* Intro Text */}
           <div className="relative z-70 text-center px-6 pt-0 lg:pt-[140px] mt-[5vw] lg:mt-[2vw] pb-10 md:pb-32">
-            <h1 className="font-sans text-white text-[15px] sm:text-base md:text-lg lg:text-xl font-normal leading-relaxed tracking-wide max-w-[360px] sm:max-w-[850px] mx-auto">
+            <h1 className="font-sans text-white text-[22px] sm:text-[24px] md:text-lg lg:text-3xl font-normal leading-relaxed tracking-wide w-full sm:max-w-[850px] lg:max-w-[1200px] mx-auto px-2">
               Hi, I&apos;m{" "}
-              <span className="font-accent text-[2.2em] md:text-[3em] text-[#3FE2FF] align-middle px-1 leading-none">
+              <span className="font-accent text-[2em] md:text-[2em] lg:text-[2.5em] text-[#3FE2FF] align-middle px-1 leading-none">
                 Naya
               </span>
               ! I&apos;m a digital &amp; traditional artist,
@@ -165,9 +165,9 @@ export default function Home() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="mt-8 text-center pb-4 md:pb-0">
-                    <h2 className="font-sans font-bold text-white text-[18px] md:text-[20px] tracking-tight">{item.title}</h2>
-                    <p className="font-sans text-white/50 text-[14px] md:text-[15px] mt-2 whitespace-pre-line font-medium leading-relaxed italic">{item.subtitle}</p>
+                  <div className="mt-8 lg:mt-12 text-center pb-4 md:pb-0">
+                    <h2 className="font-sans font-bold text-white text-[30px] md:text-[32px] lg:text-[38px] tracking-tight">{item.title}</h2>
+                    <p className="font-sans text-white/50 text-[18px] md:text-[20px] lg:text-[22px] mt-2 lg:mt-4 whitespace-pre-line font-medium leading-relaxed italic">{item.subtitle}</p>
                   </div>
                 </Link>
               ))}
@@ -188,9 +188,9 @@ export default function Home() {
                       className="w-full h-full object-cover"
                     />
                   </div>
-                  <div className="mt-8 text-center pb-4 md:pb-0">
-                    <h2 className="font-sans font-bold text-white text-[18px] md:text-[20px] tracking-tight">{item.title}</h2>
-                    <p className="font-sans text-white/50 text-[14px] md:text-[15px] mt-2 whitespace-pre-line font-medium leading-relaxed italic">{item.subtitle}</p>
+                  <div className="mt-8 lg:mt-12 text-center pb-4 md:pb-0">
+                    <h2 className="font-sans font-bold text-white text-[30px] md:text-[32px] lg:text-[38px] tracking-tight">{item.title}</h2>
+                    <p className="font-sans text-white/50 text-[18px] md:text-[20px] lg:text-[22px] mt-2 lg:mt-4 whitespace-pre-line font-medium leading-relaxed italic">{item.subtitle}</p>
                   </div>
                 </Link>
               ))}

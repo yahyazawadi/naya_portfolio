@@ -80,19 +80,19 @@ function GroupCard({
   const isLTR = index % 2 === 0;
 
   const textBlock = (
-    <div className="flex-1 flex flex-col gap-4 py-2 md:py-4">
+    <div className="flex-1 flex flex-col items-center md:items-start gap-4 py-2 md:py-4">
       <h2
-        className="font-grover text-[#48ABBF] text-[28px] md:text-[32px] lg:text-[38px] leading-tight"
+        className="font-grover text-[#48ABBF] text-[44px] md:text-[48px] lg:text-[60px] leading-tight text-center md:text-left"
       >
         {group.title}:
       </h2>
       {group.date && (
-        <div className="flex items-center gap-2 text-white/40 text-[13px] font-bold tracking-widest uppercase">
+        <div className="flex items-center justify-center md:justify-start gap-2 text-white/40 text-[13px] lg:text-[16px] font-bold tracking-widest uppercase">
           <span className="w-1.5 h-1.5 rounded-full bg-[#48ABBF]/40" />
           {group.date}
         </div>
       )}
-      <p className="text-white/75 text-[16px] md:text-[17px] leading-relaxed max-w-[500px]">
+      <p className="text-white/75 text-[16px] md:text-[17px] lg:text-[22px] leading-relaxed max-w-[500px] lg:max-w-[700px] text-center md:text-left">
         {group.description}
       </p>
     </div>
@@ -283,12 +283,12 @@ function GroupDetailView({
               {(item.date || item.description) && (
                 <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">
                   {item.date && (
-                    <span className="text-[#48ABBF] text-[15px] md:text-[16px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
+                    <span className="text-[#48ABBF] text-[15px] md:text-[16px] lg:text-[20px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
                       {item.date}
                     </span>
                   )}
                   {item.description && (
-                    <p className="text-white text-[20px] md:text-[24px] leading-tight font-black tracking-tight">
+                    <p className="text-white text-[20px] md:text-[24px] lg:text-[32px] leading-tight font-black tracking-tight">
                       {item.description}
                     </p>
                   )}
@@ -444,7 +444,7 @@ export default function GalleryPage({ title, groups: initialGroups }: GalleryPag
 
           {/* Title */}
           <h1
-            className="font-grover text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[52px] leading-tight"
+            className="font-grover text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[72px] leading-tight"
           >
             {headerTitle}
           </h1>

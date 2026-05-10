@@ -302,8 +302,7 @@ function GroupDetailView({
   return (
     <div className="w-full animate-fadeIn">
       <div
-        className="px-8 md:px-16 lg:px-24 py-8"
-        style={{ columns: '2 280px', gap: '16px' }}
+        className="px-8 md:px-16 lg:px-24 py-8 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10 items-start"
       >
         {group.images.map((item, i) => (
           <div

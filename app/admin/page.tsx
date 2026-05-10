@@ -466,7 +466,7 @@ export default function AdminDashboard() {
       };
 
       let finalCoverImage = existingCoverImage;
-      const finalGallery: { url: string; description: string }[] = [];
+      const finalGallery: { url: string; description: string; date: string }[] = [];
 
       if (thumbnail) {
         const optimized = await optimizeFile(thumbnail, 'Cover Image');

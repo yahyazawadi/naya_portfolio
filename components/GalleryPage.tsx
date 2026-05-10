@@ -33,7 +33,7 @@ const isVideo = (src: string) => {
   return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
 };
 
-function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt: string, className?: string, onConverted?: (newUrl: string) => void }) {
+function AssetWithFade({ src, alt, className, onConverted, onEnded, isPlaying }: { src: string, alt: string, className?: string, onConverted?: (newUrl: string) => void, onEnded?: () => void, isPlaying?: boolean }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const video = isVideo(src);
   const [el, setEl] = useState<HTMLVideoElement | null>(null);
@@ -41,53 +41,18 @@ function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt:
   useEffect(() => {
     if (!el || !video) return;
 
-    const handlePlayRequest = () => {
-      // Pause any other video that might be playing
-      const allVideos = document.querySelectorAll('video');
-      allVideos.forEach(v => {
-        if (v !== el && !v.paused) v.pause();
-      });
+    if (isPlaying) {
       el.play().catch(() => {});
-    };
+    } else {
+      el.pause();
+    }
+  }, [el, video, isPlaying]);
 
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          // Stricter intersection: must be significantly visible
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-            handlePlayRequest();
-          } else if (!entry.isIntersecting || entry.intersectionRatio < 0.2) {
-            el.pause();
-          }
-        });
-      },
-      { threshold: [0, 0.2, 0.6] }
-    );
-
-    observer.observe(el);
-
-    // Handle "play them in order" - when one ends, try to find the next visible one
-    const handleEnded = () => {
-      const allVideos = Array.from(document.querySelectorAll('video'));
-      const currentIndex = allVideos.indexOf(el);
-      if (currentIndex !== -1 && currentIndex < allVideos.length - 1) {
-        const nextVideo = allVideos[currentIndex + 1];
-        // Only autoplay next if it's somewhat visible
-        const rect = nextVideo.getBoundingClientRect();
-        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
-        if (isVisible) {
-          nextVideo.play().catch(() => {});
-        }
-      }
-    };
-
-    el.addEventListener('ended', handleEnded);
-
-    return () => {
-      observer.disconnect();
-      el.removeEventListener('ended', handleEnded);
-    };
-  }, [el, video]);
+  useEffect(() => {
+    if (!el || !video || !onEnded) return;
+    el.addEventListener('ended', onEnded);
+    return () => el.removeEventListener('ended', onEnded);
+  }, [el, video, onEnded]);
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${className?.includes('lightbox-image') ? 'bg-transparent' : 'bg-white/5'}`}>
@@ -97,7 +62,6 @@ function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt:
           src={src}
           onLoadedData={() => setIsLoaded(true)}
           className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          loop
           muted
           playsInline
         />
@@ -313,6 +277,28 @@ function GroupDetailView({
   onImageClick: (index: number) => void;
   onConverted: (oldUrl: string, newUrl: string) => void;
 }) {
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+
+  // Initialize: start first video
+  useEffect(() => {
+    const firstVideoIdx = group.images.findIndex(img => isVideo(img.url));
+    if (firstVideoIdx !== -1) setPlayingIndex(firstVideoIdx);
+  }, [group.id]);
+
+  const handleEnded = (index: number) => {
+    // Find next video
+    const nextVideoIdx = group.images.findIndex((img, i) => i > index && isVideo(img.url));
+    if (nextVideoIdx !== -1) {
+      setPlayingIndex(nextVideoIdx);
+      // Optional: scroll to next video
+      const el = document.getElementById(`gallery-item-${nextVideoIdx}`);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+      // Loop back to first or just stop
+      setPlayingIndex(null);
+    }
+  };
+
   return (
     <div className="w-full animate-fadeIn">
       <div
@@ -331,6 +317,8 @@ function GroupDetailView({
                 alt={`${group.title} ${i + 1}`} 
                 className="w-full h-auto object-cover rounded-[2rem] group-hover/tile:scale-[1.02] duration-700 transition-transform" 
                 onConverted={(newUrl) => onConverted(item.url, newUrl)}
+                isPlaying={playingIndex === i}
+                onEnded={() => handleEnded(i)}
               />
               {(item.date || item.description) && (
                 <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">

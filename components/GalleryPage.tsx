@@ -1,18 +1,25 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Footer from './Footer';
 import SmartImage from './SmartImage';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+export interface GalleryItem {
+  url: string;
+  description?: string;
+  date?: string;
+}
+
 export interface ArtGroup {
   id: string;
   title: string;
   description: string;
+  date?: string;
   coverImage: string;
-  images: string[];
+  images: GalleryItem[];
 }
 
 interface GalleryPageProps {
@@ -31,7 +38,7 @@ function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt:
   const video = isVideo(src);
 
   return (
-    <div className="relative w-full h-full bg-white/5 rounded-sm overflow-hidden">
+    <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${className?.includes('lightbox-image') ? 'bg-transparent' : 'bg-white/5'}`}>
       {video ? (
         <video
           src={src}
@@ -73,13 +80,19 @@ function GroupCard({
   const isLTR = index % 2 === 0;
 
   const textBlock = (
-    <div className="flex-1 flex flex-col gap-5 py-4">
+    <div className="flex-1 flex flex-col gap-4 py-2 md:py-4">
       <h2
-        className="font-grover text-[#48ABBF] text-[26px] md:text-[32px] lg:text-[38px] leading-tight"
+        className="font-grover text-[#48ABBF] text-[28px] md:text-[32px] lg:text-[38px] leading-tight"
       >
         {group.title}:
       </h2>
-      <p className="text-white/75 text-[15px] md:text-[17px] leading-relaxed max-w-[440px]">
+      {group.date && (
+        <div className="flex items-center gap-2 text-white/40 text-[13px] font-bold tracking-widest uppercase">
+          <span className="w-1.5 h-1.5 rounded-full bg-[#48ABBF]/40" />
+          {group.date}
+        </div>
+      )}
+      <p className="text-white/75 text-[16px] md:text-[17px] leading-relaxed max-w-[500px]">
         {group.description}
       </p>
     </div>
@@ -87,22 +100,20 @@ function GroupCard({
 
   const imageBlock = (
     <div
-      className={`flex-[1.4] cursor-pointer group/img ${
-        !isLTR ? 'border-2 border-[#48ABBF] p-1' : ''
-      }`}
+      className="flex-[1.4] w-full cursor-pointer group/img border border-white/10 p-1 bg-white/5 rounded-lg overflow-hidden shadow-2xl"
     >
       <div 
-        className="relative overflow-hidden group-hover/img:scale-[1.04] transition-transform duration-500"
+        className="relative overflow-hidden group-hover/img:scale-[1.02] transition-transform duration-500 rounded-md"
         onClick={onSelect}
       >
         <AssetWithFade 
           src={group.coverImage} 
           alt={group.title} 
-          className="w-full h-[260px] md:h-[340px] lg:h-[380px] object-cover" 
+          className="w-full h-[300px] md:h-[340px] lg:h-[380px] object-cover" 
           onConverted={(newUrl) => onConverted(group.coverImage, newUrl)}
         />
-        <div className="absolute inset-0 bg-[#48ABBF]/0 group-hover/img:bg-black/30 transition-all duration-300 flex items-center justify-center">
-          <span className="text-white text-[16px] font-semibold opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-black/50 px-6 py-3 rounded-full backdrop-blur-sm tracking-wide">
+        <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-all duration-300 flex items-center justify-center">
+          <span className="text-white text-[16px] font-semibold opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-[#48ABBF]/80 px-6 py-3 rounded-full backdrop-blur-sm tracking-wide">
             View Gallery →
           </span>
         </div>
@@ -112,8 +123,8 @@ function GroupCard({
 
   return (
     <div
-      className={`w-full flex flex-col md:flex-row items-center gap-8 md:gap-12 lg:gap-20
-        py-10 md:py-14 px-8 md:px-16 lg:px-28
+      className={`w-full flex flex-col md:flex-row items-center gap-10 md:gap-12 lg:gap-20
+        py-12 md:py-16 px-6 md:px-16 lg:px-28
         border-b border-white/5 last:border-b-0
         ${isLTR ? 'md:flex-row' : 'md:flex-row-reverse'}`}
     >
@@ -131,7 +142,7 @@ function Lightbox({
   onNext, 
   onPrev 
 }: { 
-  images: string[]; 
+  images: GalleryItem[]; 
   currentIndex: number; 
   onClose: () => void;
   onNext: () => void;
@@ -173,7 +184,7 @@ function Lightbox({
 
   return (
     <div 
-      className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-fadeIn touch-none select-none p-4 md:p-12"
+      className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-md flex items-center justify-center animate-fadeIn touch-none select-none"
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}
       onClick={onClose}
@@ -199,29 +210,41 @@ function Lightbox({
         <ChevronRight size={24} className="md:w-8 md:h-8" />
       </button>
 
-      {/* Main Asset Container */}
       <div 
-        className="relative w-full h-full flex flex-col items-center justify-center pointer-events-none" 
+        className="relative w-full h-full flex items-center justify-center" 
         onClick={(e) => e.stopPropagation()}
       >
-        {isVideo(images[currentIndex]) ? (
-          <video 
-            src={images[currentIndex]} 
-            className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
-            controls
-            autoPlay
-            playsInline
-            onClick={(e) => e.stopPropagation()}
+        {/* Main Image - Takes full screen space */}
+        <div className="w-full h-full flex items-center justify-center p-2 md:p-6">
+          <AssetWithFade 
+            src={images[currentIndex].url} 
+            alt={`Gallery image ${currentIndex + 1}`} 
+            className="lightbox-image w-full h-full object-contain pointer-events-auto"
           />
-        ) : (
-          <img 
-            src={images[currentIndex]} 
-            alt="" 
-            className="max-w-full max-h-full object-contain shadow-2xl rounded-sm pointer-events-auto"
-          />
-        )}
-        <div className="absolute bottom-12 md:bottom-24 left-1/2 -translate-x-1/2 text-white/50 text-sm md:text-lg font-medium tracking-[0.3em] uppercase">
-          {currentIndex + 1} / {images.length}
+        </div>
+
+        {/* Floating Info & Navigation Overlay */}
+        <div className="absolute bottom-8 md:bottom-16 left-0 right-0 flex flex-col items-center gap-6 pointer-events-none z-[220]">
+          {/* Description & Date Badge */}
+          {(images[currentIndex].description || images[currentIndex].date) && (
+            <div className="bg-black/70 backdrop-blur-xl px-10 py-4 rounded-[2rem] border border-white/10 max-w-[90vw] md:max-w-3xl text-center animate-fadeIn pointer-events-auto flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2 mx-6 shadow-2xl">
+              {images[currentIndex].date && (
+                <span className="text-[#48ABBF] text-[13px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
+                  {images[currentIndex].date}
+                </span>
+              )}
+              {images[currentIndex].description && (
+                <p className="text-white text-base md:text-xl leading-relaxed font-bold tracking-tight">
+                  {images[currentIndex].description}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Page Indicator */}
+          <div className="bg-white/5 backdrop-blur-md px-6 py-2 rounded-full border border-white/5 text-white/50 text-[12px] font-black tracking-[0.5em] uppercase pointer-events-auto">
+            {currentIndex + 1} / {images.length}
+          </div>
         </div>
       </div>
     </div>
@@ -244,19 +267,35 @@ function GroupDetailView({
         className="px-8 md:px-16 lg:px-24 py-8"
         style={{ columns: '2 280px', gap: '16px' }}
       >
-        {group.images.map((src, i) => (
+        {group.images.map((item, i) => (
           <div
             key={i}
             id={`gallery-item-${i}`}
-            className="break-inside-avoid mb-4 overflow-hidden group/tile cursor-zoom-in relative bg-white/5 rounded-sm scroll-mt-24"
+            className="break-inside-avoid mb-10 group/tile cursor-zoom-in relative scroll-mt-24"
           >
-            <AssetWithFade 
-              src={src} 
-              alt={`${group.title} ${i + 1}`} 
-              className="w-full h-auto object-cover group-hover/tile:scale-[1.03] duration-500" 
-              onConverted={(newUrl) => onConverted(src, newUrl)}
-            />
-            {/* Click overlay to trigger gallery while allowing conversion icon to be clickable */}
+            <div className="bg-white/5 border border-white/10 rounded-[2.5rem] overflow-hidden p-1.5 hover:border-[#48ABBF]/40 transition-colors duration-500 shadow-2xl">
+              <AssetWithFade 
+                src={item.url} 
+                alt={`${group.title} ${i + 1}`} 
+                className="w-full h-auto object-cover rounded-[2rem] group-hover/tile:scale-[1.02] duration-700 transition-transform" 
+                onConverted={(newUrl) => onConverted(item.url, newUrl)}
+              />
+              {(item.date || item.description) && (
+                <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">
+                  {item.date && (
+                    <span className="text-[#48ABBF] text-[15px] md:text-[16px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
+                      {item.date}
+                    </span>
+                  )}
+                  {item.description && (
+                    <p className="text-white text-[20px] md:text-[24px] leading-tight font-black tracking-tight">
+                      {item.description}
+                    </p>
+                  )}
+                </div>
+              )}
+            </div>
+            {/* Click overlay to trigger gallery */}
             <div 
               className="absolute inset-0 z-10" 
               onClick={() => onImageClick(i)} 
@@ -307,10 +346,14 @@ export default function GalleryPage({ title, groups: initialGroups }: GalleryPag
         newCover = newUrl;
         updated = true;
       }
-      if (g.images.includes(oldUrl)) {
-        newImages = newImages.map(img => img === oldUrl ? newUrl : img);
-        updated = true;
-      }
+      newImages = newImages.map(img => {
+        const url = typeof img === 'string' ? img : img.url;
+        if (url === oldUrl) {
+          updated = true;
+          return { ...(typeof img === 'string' ? {} : img), url: newUrl };
+        }
+        return img;
+      });
 
       if (updated) {
         const updatedGroup = { ...g, coverImage: newCover, images: newImages };
@@ -366,12 +409,16 @@ export default function GalleryPage({ title, groups: initialGroups }: GalleryPag
   }
 
   function handleBack() {
-    setSelectedGroup(null);
-    window.scrollTo({ top: 0, behavior: 'instant' });
-    // Clear URL param
-    const url = new URL(window.location.href);
-    url.searchParams.delete('id');
-    window.history.pushState({}, '', url.toString());
+    if (selectedGroup) {
+      setSelectedGroup(null);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      // Clear URL param
+      const url = new URL(window.location.href);
+      url.searchParams.delete('id');
+      window.history.pushState({}, '', url.toString());
+    } else {
+      router.push('/');
+    }
   }
 
   const headerTitle = selectedGroup ? selectedGroup.title : title;
@@ -381,27 +428,27 @@ export default function GalleryPage({ title, groups: initialGroups }: GalleryPag
       {/* CRITICAL: DO NOT change overflow-hidden on this root div. It is needed for this page. */}
       
       {/* ── Header bar ── */}
-      <div className="w-full bg-[#0F314D] flex items-center justify-center relative z-40
+      <div className="w-full bg-[#0F314D] relative z-40
         pt-[120px] pb-8 md:pt-[140px] md:pb-10 px-10 md:px-20"
       >
-        {/* Back arrow */}
-        {selectedGroup && (
+        <div className="relative flex items-center justify-center w-full">
+          {/* Back arrow - Always visible */}
           <button
             onClick={handleBack}
-            className="absolute left-10 md:left-20 text-[#48ABBF] hover:text-white
-              transition-colors text-[28px] md:text-[36px] leading-none"
+            className="absolute left-0 md:left-0 text-[#48ABBF] hover:text-white
+              transition-colors z-50"
             aria-label="Back"
           >
-            ←
+            <ArrowLeft size={48} className="md:w-10 md:h-10" />
           </button>
-        )}
 
-        {/* Title */}
-        <h1
-          className="font-grover text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[52px] leading-tight"
-        >
-          {headerTitle}
-        </h1>
+          {/* Title */}
+          <h1
+            className="font-grover text-[#48ABBF] text-center text-[26px] sm:text-[30px] md:text-[44px] lg:text-[52px] leading-tight"
+          >
+            {headerTitle}
+          </h1>
+        </div>
       </div>
 
       {/* ── Side circles ── */}

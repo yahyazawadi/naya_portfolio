@@ -123,7 +123,7 @@ export default function SmartImage({ src, alt, className, onConverted, ...props 
         {...(props as any)}
         src={currentSrc}
         alt={alt}
-        className="w-full h-full object-cover transition-transform duration-700 group-hover/smart-image:scale-105"
+        className={`w-full h-full transition-transform duration-700 ${className?.includes('object-contain') ? 'object-contain' : 'object-cover'} ${className?.includes('lightbox-image') ? '' : 'group-hover/smart-image:scale-105'}`}
       />
       
       {shouldShowIcon && (

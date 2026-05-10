@@ -1,95 +1,91 @@
 "use client";
 
 import { useEffect } from "react";
-import { getAllPortfolioGroups } from "../app/actions/portfolio";
 
 /**
  * PortfolioPrefetcher
  * 
- * Silently fetches all portfolio data and prefetches images 
- * ONLY after the main page has fully loaded. This ensures 
- * that the initial experience is lightning fast, while 
- * subsequent navigations feel instantaneous.
+ * Silently prefetches critical static assets (images/vectors defined in code)
+ * after the main page has loaded. Aggressively caches them to ensure
+ * smooth navigation.
  */
 export default function PortfolioPrefetcher() {
   useEffect(() => {
-    // 1. Only run once per browser session to prevent redundant work 
-    // on every page navigation (improves "heavy" navigation feel).
-    if (typeof window !== "undefined" && (window as any)._portfolioPrefetched) {
+    if (typeof window !== "undefined" && (window as any)._staticPrefetched) {
       return;
     }
 
     let isCancelled = false;
 
     const prefetch = async () => {
-      // 2. Wait for window load event if not already loaded
+      // 1. Wait for window load
       if (document.readyState !== "complete") {
         await new Promise((resolve) => window.addEventListener("load", resolve, { once: true }));
       }
-
       if (isCancelled) return;
 
-      // 3. Wait an extra 4 seconds (instead of 2) to ensure all main page 
-      // animations and critical tasks are truly finished.
-      await new Promise((resolve) => setTimeout(resolve, 4000));
-
+      // 2. Start prefetching after 2 seconds (Aggressive)
+      await new Promise((resolve) => setTimeout(resolve, 2000));
       if (isCancelled) return;
 
       try {
-        // 4. Fetch all portfolio groups (metadata)
-        const groups = await getAllPortfolioGroups();
-        if (isCancelled) return;
+        (window as any)._staticPrefetched = true;
 
-        // Mark as prefetched so it doesn't run again on next navigation
-        (window as any)._portfolioPrefetched = true;
+        // Static assets used throughout the codebase (Hero, UI, Categories)
+        const staticAssets = [
+          "/images/DigitalArt&Illustration.webp",
+          "/images/traditionalarts&crafts.webp",
+          "/images/illustrator&photoshop.webp",
+          "/images/Animation&MotionGraphics.webp",
+          "/images/city.webp",
+          "/images/cloud_small_1.webp",
+          "/images/cloud_small_2.webp",
+          "/images/nayaherself.webp",
+          "/vectors/mainpagebackgroundcirclescopy.webp",
+          "/vectors/main_left_circles.webp",
+          "/vectors/main_right_circles.webp",
+          "/vectors/naya_icon.webp",
+          "/vectors/page_left_side.webp",
+          "/vectors/page_right_side.webp",
+          "/vectors/vector1.webp",
+          "/vectors/mainpagebackgroundcircles.webp",
+          "/images/city1.webp",
+          "/images/city2.webp",
+          "/images/city3.webp",
+          "/images/city4.webp",
+          "/images/cityglare5.webp",
+          "/images/cloud_variant_1.webp",
+          "/images/cloud_variant_2.webp",
+          "/images/cloud_variant_3.webp",
+          "/images/cloud_variant_4.webp",
+          "/images/cloud_variant_5.webp",
+          "/images/cloud_variant_6.webp",
+        ];
 
-        // 5. Collect all image URLs (Cover images + Gallery images)
-        const urls = new Set<string>();
-        groups.forEach((group: any) => {
-          if (group.coverImage) urls.add(group.coverImage);
-          if (Array.isArray(group.images)) {
-            group.images.forEach((img: string) => urls.add(img));
-          }
-        });
+        const urlList = Array.from(new Set(staticAssets));
 
-        const urlList = Array.from(urls);
-
-        // 6. Prefetch assets in smaller chunks to avoid network saturation
-        // Slower chunking = smoother main thread during navigation
-        const chunkSize = 2; // Reduced from 4
-        const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-        
+        // 3. Aggressive prefetching in parallel chunks
+        const chunkSize = 4;
         for (let i = 0; i < urlList.length; i += chunkSize) {
           if (isCancelled) break;
-          
           const chunk = urlList.slice(i, i + chunkSize);
           await Promise.all(
             chunk.map((url) => {
               return new Promise((resolve) => {
-                const isVideo = videoExtensions.some(ext => url.toLowerCase().endsWith(ext));
-                if (isVideo) {
-                  const vid = document.createElement('video');
-                  vid.onloadedmetadata = resolve;
-                  vid.onerror = resolve;
-                  vid.src = url;
-                  vid.preload = 'auto';
-                } else {
-                  const img = new Image();
-                  img.onload = resolve;
-                  img.onerror = resolve;
-                  img.src = url;
-                }
+                const img = new Image();
+                img.onload = resolve;
+                img.onerror = resolve;
+                img.src = url;
               });
             })
           );
-          
-          // Longer breath between chunks (500ms instead of 200ms)
-          await new Promise((resolve) => setTimeout(resolve, 500));
+          // Very short breath
+          await new Promise((resolve) => setTimeout(resolve, 150));
         }
 
-        console.log(`[Prefetcher] Successfully cached ${urlList.length} portfolio assets.`);
+        console.log(`[Prefetcher] Aggressively cached ${urlList.length} static assets.`);
       } catch (error) {
-        console.warn("[Prefetcher] Silent prefetch failed:", error);
+        console.warn("[Prefetcher] Static prefetch failed:", error);
       }
     };
 

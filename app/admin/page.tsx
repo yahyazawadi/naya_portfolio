@@ -3,7 +3,7 @@
 export const runtime = 'edge';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Upload, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle, ChevronLeft, Edit, Trash2, Settings2, PlusCircle, X, RefreshCw } from 'lucide-react';
+import { Upload, Image as ImageIcon, Loader2, CheckCircle2, AlertCircle, ChevronLeft, Edit, Trash2, Settings2, PlusCircle, X, RefreshCw, GripVertical, Calendar } from 'lucide-react';
 import Link from 'next/link';
 import { uploadImage } from '../actions/upload';
 import { savePortfolioGroup, getAllPortfolioGroups, deletePortfolioGroup, updatePortfolioGroup } from '../actions/portfolio';
@@ -32,10 +32,10 @@ export default function AdminDashboard() {
   const [category, setCategory] = useState(categories[0].id);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
+  const [date, setDate] = useState('');
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [existingCoverImage, setExistingCoverImage] = useState<string>('');
-  const [gallery, setGallery] = useState<File[]>([]);
-  const [existingGallery, setExistingGallery] = useState<string[]>([]);
+  const [gallery, setGallery] = useState<{ url?: string; file?: File; description: string; date?: string; id: string }[]>([]);
   
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -43,18 +43,22 @@ export default function AdminDashboard() {
 
   // Load items when switching to manage
   useEffect(() => {
+    console.log("Admin: Active tab changed to:", activeTab);
     if (activeTab === 'manage') {
       fetchItems();
     }
   }, [activeTab]);
 
   const fetchItems = async () => {
+    console.log("Admin: Fetching items...");
     setIsLoadingItems(true);
     try {
       const items = await getAllPortfolioGroups();
+      console.log("Admin: Items fetched successfully:", items?.length || 0);
       setExistingItems(items || []);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      console.error("Admin: Fetch items error:", e);
+      setStatus({ type: 'error', message: "Failed to load items: " + e.message });
     } finally {
       setIsLoadingItems(false);
     }
@@ -66,20 +70,21 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      setGallery(prev => [...prev, ...Array.from(e.target.files!)]);
-    }
-  };
+
 
   const handleEdit = (item: any) => {
     setEditingId(item.id);
     setTitle(item.title);
     setDescription(item.description);
     setCategory(item.category);
+    setDate(item.date || '');
     setExistingCoverImage(item.coverImage);
-    setExistingGallery(item.images || []);
-    setGallery([]);
+    setGallery((item.images || []).map((img: any, idx: number) => ({
+      url: typeof img === 'string' ? img : img.url,
+      description: typeof img === 'string' ? '' : (img.description || ''),
+      date: typeof img === 'string' ? '' : (img.date || ''),
+      id: `existing-${idx}-${Date.now()}`
+    })));
     setThumbnail(null);
     setActiveTab('upload');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -116,10 +121,14 @@ export default function AdminDashboard() {
         updated = true;
       }
 
-      if (item.images?.includes(oldUrl)) {
-        newImages = newImages.map(img => img === oldUrl ? newUrl : img);
-        updated = true;
-      }
+      newImages = newImages.map(img => {
+        const url = typeof img === 'string' ? img : img.url;
+        if (url === oldUrl) {
+          updated = true;
+          return typeof img === 'string' ? newUrl : { ...img, url: newUrl };
+        }
+        return img;
+      });
 
       if (updated) {
         return { ...item, coverImage: newCover, images: newImages };
@@ -128,17 +137,53 @@ export default function AdminDashboard() {
     }));
 
     if (existingCoverImage === oldUrl) setExistingCoverImage(newUrl);
-    if (existingGallery.includes(oldUrl)) {
-      setExistingGallery(prev => prev.map(url => url === oldUrl ? newUrl : url));
+    setGallery(prev => prev.map(item => item.url === oldUrl ? { ...item, url: newUrl } : item));
+  };
+
+  const removeImage = (id: string) => {
+    setGallery(prev => prev.filter(item => item.id !== id));
+  };
+
+  const updateImageDescription = (id: string, description: string) => {
+    setGallery(prev => prev.map(item => item.id === id ? { ...item, description } : item));
+  };
+
+  const updateImageDate = (id: string, date: string) => {
+    setGallery(prev => prev.map(item => item.id === id ? { ...item, date } : item));
+  };
+
+  const [draggedItemIndex, setDraggedItemIndex] = useState<number | null>(null);
+
+  const handleDragStart = (index: number) => {
+    setDraggedItemIndex(index);
+  };
+
+  const handleDragOver = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (draggedItemIndex === null || draggedItemIndex === index) return;
+    
+    const newGallery = [...gallery];
+    const item = newGallery[draggedItemIndex];
+    newGallery.splice(draggedItemIndex, 1);
+    newGallery.splice(index, 0, item);
+    setDraggedItemIndex(index);
+    setGallery(newGallery);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItemIndex(null);
+  };
+
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files).map(file => ({
+        file,
+        description: '',
+        date: '',
+        id: `new-${Math.random()}-${Date.now()}`
+      }));
+      setGallery(prev => [...prev, ...newFiles]);
     }
-  };
-
-  const removeExistingImage = (url: string) => {
-    setExistingGallery(prev => prev.filter(u => u !== url));
-  };
-
-  const removeNewImage = (index: number) => {
-    setGallery(prev => prev.filter((_, i) => i !== index));
   };
 
   const [isBulkConverting, setIsBulkConverting] = useState(false);
@@ -146,8 +191,8 @@ export default function AdminDashboard() {
   const handleBulkConvert = async () => {
     const allItems = [
       { id: 'Cover Image', url: existingCoverImage },
-      ...existingGallery.map((url, i) => ({ id: `Gallery Item ${i + 1}`, url }))
-    ].filter(item => item.url && !item.url.startsWith('data:'));
+      ...gallery.map((item, i) => ({ id: `Gallery Item ${i + 1}`, url: item.url }))
+    ].filter(item => item.url && !item.url.startsWith('data:')) as { id: string, url: string }[];
 
     const needsOptimization = allItems.filter(item => {
       const url = item.url.toLowerCase();
@@ -318,17 +363,17 @@ export default function AdminDashboard() {
   };
 
   const unconvertedCount = useMemo(() => {
-    const allItems = [
+    const allUrls = [
       existingCoverImage,
-      ...existingGallery
-    ].filter(url => url && typeof url === 'string' && !url.startsWith('data:'));
+      ...gallery.map(item => item.url).filter(Boolean)
+    ].filter(url => url && typeof url === 'string' && !url.startsWith('data:')) as string[];
 
-    return allItems.filter(url => {
+    return allUrls.filter(url => {
       const u = url.toLowerCase();
       if (isVideo(u)) return !u.endsWith('.webm');
       return !u.endsWith('.webp');
     }).length;
-  }, [existingCoverImage, existingGallery]);
+  }, [existingCoverImage, gallery]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -421,7 +466,7 @@ export default function AdminDashboard() {
       };
 
       let finalCoverImage = existingCoverImage;
-      let finalGallery = [...existingGallery];
+      const finalGallery: { url: string; description: string }[] = [];
 
       if (thumbnail) {
         const optimized = await optimizeFile(thumbnail, 'Cover Image');
@@ -436,18 +481,32 @@ export default function AdminDashboard() {
 
       if (gallery.length > 0) {
         for (let i = 0; i < gallery.length; i++) {
-          const optimized = await optimizeFile(gallery[i], `Gallery ${i + 1}`);
-          const formData = new FormData();
-          formData.append('file', optimized);
-          const res = await fetch('/api/upload', { method: 'POST', body: formData });
-          if (!res.ok) throw new Error(`Gallery upload ${i + 1} failed`);
-          const data = await res.json() as { url: string };
-          finalGallery.push(data.url);
+          const item = gallery[i];
+          let url = item.url || '';
+
+          if (item.file) {
+            const optimized = await optimizeFile(item.file, `Gallery ${i + 1}`);
+            const formData = new FormData();
+            formData.append('file', optimized);
+            const res = await fetch('/api/upload', { method: 'POST', body: formData });
+            if (!res.ok) throw new Error(`Gallery upload ${i + 1} failed`);
+            const data = await res.json() as { url: string };
+            url = data.url;
+          }
+
+          finalGallery.push({ url, description: item.description, date: item.date || '' });
           setProgress(10 + Math.floor(((i + 1) / gallery.length) * 80));
         }
       }
 
-      const portfolioData = { title, description, category, coverImage: finalCoverImage, images: finalGallery };
+      const portfolioData = { 
+        title, 
+        description, 
+        category, 
+        date,
+        coverImage: finalCoverImage, 
+        images: finalGallery 
+      };
       const res = editingId 
         ? await updatePortfolioGroup(editingId, portfolioData)
         : await savePortfolioGroup(portfolioData);
@@ -458,7 +517,7 @@ export default function AdminDashboard() {
       setProgress(100);
 
       if (!editingId) {
-        setTitle(''); setDescription(''); setThumbnail(null); setGallery([]);
+        setTitle(''); setDescription(''); setDate(''); setThumbnail(null); setGallery([]);
       }
       setExistingItems(await getAllPortfolioGroups());
       if (editingId) setTimeout(() => { setEditingId(null); setActiveTab('manage'); }, 2000);
@@ -475,17 +534,26 @@ export default function AdminDashboard() {
     setEditingId(null);
     setTitle('');
     setDescription('');
+    setDate('');
     setCategory('digital-art');
     setThumbnail(null);
     setExistingCoverImage('');
     setGallery([]);
-    setExistingGallery([]);
     setStatus(null);
     setActiveTab('upload');
   };
 
+  const clearForm = () => {
+    setTitle('');
+    setDescription('');
+    setDate('');
+    setThumbnail(null);
+    setGallery([]);
+    setEditingId(null);
+  };
+
   return (
-    <div className="min-h-screen bg-[#051C30] text-white p-6 md:p-12 lg:p-20 font-sans">
+    <div className="min-h-screen bg-[#051C30] text-white pt-24 pb-12 px-6 md:pt-32 md:px-12 lg:pt-40 lg:px-20 font-sans">
       <div className="max-w-6xl mx-auto">
         
         {/* Navigation & Tabs */}
@@ -507,24 +575,53 @@ export default function AdminDashboard() {
               Admin Portal
             </h1>
           </div>
+        </div>
 
-          <div className="flex p-1 bg-[#0F314D] rounded-2xl border border-white/5">
+        {/* Tab Navigation Row */}
+        <div className="flex justify-center mb-16 relative z-[9999]">
+          <div className="flex p-1.5 bg-[#0F314D] rounded-2xl border border-white/10 shadow-2xl backdrop-blur-md">
             <button 
-              onClick={handleAddNew}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-medium ${(activeTab === 'upload' && !editingId) ? 'bg-[#48ABBF] text-[#051C30]' : 'text-white/60 hover:text-white'}`}
+              onClick={() => {
+                console.log("Admin: Add New clicked");
+                handleAddNew();
+              }}
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl transition-all duration-300 font-bold text-sm uppercase tracking-widest touch-manipulation relative z-[9999] ${(activeTab === 'upload' && !editingId) ? 'bg-[#48ABBF] text-[#051C30] shadow-[0_0_20px_rgba(72,171,191,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
-              <PlusCircle size={18} />
+              <PlusCircle size={20} />
               Add New
             </button>
             <button 
-              onClick={() => setActiveTab('manage')}
-              className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all font-medium ${activeTab === 'manage' ? 'bg-[#48ABBF] text-[#051C30]' : 'text-white/60 hover:text-white'}`}
+              onClick={() => {
+                console.log("Admin: Manage clicked");
+                setEditingId(null);
+                setActiveTab('manage');
+                fetchItems();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className={`flex items-center gap-3 px-8 py-4 rounded-xl transition-all duration-300 font-bold text-sm uppercase tracking-widest touch-manipulation relative z-[9999] ${activeTab === 'manage' ? 'bg-[#48ABBF] text-[#051C30] shadow-[0_0_20px_rgba(72,171,191,0.3)]' : 'text-white/40 hover:text-white hover:bg-white/5'}`}
             >
-              <Settings2 size={18} />
+              {isLoadingItems ? <Loader2 className="animate-spin" size={20} /> : <Settings2 size={20} />}
               Manage
             </button>
           </div>
         </div>
+        
+        {status && (
+          <div className={`mb-8 p-6 rounded-3xl border flex items-center gap-4 animate-fadeIn backdrop-blur-xl ${status.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
+            {status.type === 'success' ? <CheckCircle2 size={24} /> : <AlertCircle size={24} />}
+            <div className="flex-1">
+              <p className="font-bold text-lg">{status.message}</p>
+              {progress > 0 && progress < 100 && (
+                <div className="mt-3 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-current transition-all duration-300" style={{ width: `${progress}%` }} />
+                </div>
+              )}
+            </div>
+            <button onClick={() => setStatus(null)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+              <X size={20} />
+            </button>
+          </div>
+        )}
 
         {activeTab === 'upload' ? (
           <form onSubmit={handleSubmit} className="space-y-10 bg-[#0F314D]/40 p-8 md:p-12 rounded-3xl border border-white/5 backdrop-blur-xl shadow-2xl animate-fadeIn">
@@ -569,6 +666,29 @@ export default function AdminDashboard() {
                     placeholder="Describe this collection..."
                     className="w-full bg-[#051C30]/50 border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:border-[#48ABBF] transition-all resize-none"
                   />
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold tracking-wider text-[#48ABBF] uppercase">Collection Date</label>
+                  <div className="relative flex items-center">
+                    <input 
+                      type="text" 
+                      value={date}
+                      onChange={(e) => setDate(e.target.value)}
+                      placeholder="e.g. Summer 2024 or 20/05/2024"
+                      className="w-full bg-[#051C30]/50 border border-white/10 rounded-xl px-5 py-4 pr-14 focus:outline-none focus:border-[#48ABBF] transition-all"
+                    />
+                    <div className="absolute right-5 flex items-center">
+                      <div className="relative">
+                        <Calendar size={20} className="text-[#48ABBF] cursor-pointer hover:text-white transition-colors" />
+                        <input 
+                          type="date"
+                          className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                          onChange={(e) => setDate(e.target.value)}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 {/* --- Cover Image Section --- */}
@@ -623,85 +743,139 @@ export default function AdminDashboard() {
                 </div>
 
                 {/* Image Grid for Management */}
-                <div className="grid grid-cols-3 sm:grid-cols-4 gap-4 max-h-[480px] overflow-y-auto pr-2 custom-scrollbar">
-                  {/* Existing Images */}
-                  {existingGallery.map((url, i) => (
-                    <div key={`exist-${i}`} className="relative aspect-square rounded-lg overflow-hidden group border border-white/5">
-                      {isVideo(url) ? (
-                        <video src={url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
-                      ) : (
-                        <SmartImage 
-                          src={url} 
-                          className="w-full h-full object-cover" 
-                          alt="" 
-                          onConverted={(newUrl) => handleImageConverted(url, newUrl)}
-                        />
-                      )}
-                      <button 
-                        type="button"
-                        onClick={() => removeExistingImage(url)}
-                        className="absolute top-1 right-1 p-1 bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-lg"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                  
-                  {/* New (Unuploaded) Images */}
-                  {gallery.map((file, i) => {
-                    const isVid = file.type.startsWith('video/');
+                <div className="flex flex-col gap-6 max-h-[700px] overflow-y-auto pr-4 custom-scrollbar">
+                  {gallery.map((item, i) => {
+                    const isVid = item.file ? item.file.type.startsWith('video/') : (item.url ? isVideo(item.url) : false);
+                    
                     return (
-                      <div key={`new-${i}`} className="relative aspect-square rounded-lg overflow-hidden group border border-[#48ABBF]/30 bg-[#48ABBF]/5">
-                        <div className="w-full h-full flex items-center justify-center text-[10px] text-center p-2 text-[#48ABBF]/60 break-all leading-tight">
-                          {file.name}
+                      <div 
+                        key={item.id} 
+                        draggable="true"
+                        onDragStart={() => handleDragStart(i)}
+                        onDragOver={(e) => handleDragOver(e, i)}
+                        onDragEnd={handleDragEnd}
+                        className={`relative bg-[#051C30]/40 border rounded-2xl p-4 group transition-all cursor-move active:scale-[0.98] active:rotate-1 ${draggedItemIndex === i ? 'opacity-20 border-[#48ABBF] bg-[#48ABBF]/10' : 'border-white/10 hover:border-[#48ABBF]/40'}`}
+                      >
+                        <div className="flex gap-6 items-start">
+                          <div className="mt-12 text-white/20 group-hover:text-[#48ABBF]/40 transition-colors">
+                            <GripVertical size={20} />
+                          </div>
+                          {/* Asset Preview */}
+                          <div className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 bg-black/20">
+                            {item.url ? (
+                              isVid ? (
+                                <video src={item.url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                              ) : (
+                                <SmartImage 
+                                  src={item.url} 
+                                  className="w-full h-full object-cover" 
+                                  alt="" 
+                                  onConverted={(newUrl) => handleImageConverted(item.url!, newUrl)}
+                                />
+                              )
+                            ) : (
+                              <div className="w-full h-full flex flex-col items-center justify-center text-[10px] text-center p-2 text-[#48ABBF]/60 bg-[#48ABBF]/5">
+                                <ImageIcon size={20} className="mb-1 opacity-40" />
+                                <span className="uppercase font-bold tracking-tighter">{item.file?.name.split('.').pop()}</span>
+                              </div>
+                            )}
+                            
+                            {item.file && (
+                              <div className="absolute top-1 left-1">
+                                <span className="bg-[#48ABBF] text-[#051C30] text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shadow-lg">New</span>
+                              </div>
+                            )}
+                            {isVid && (
+                              <div className="absolute bottom-1 right-1">
+                                <span className="bg-purple-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase shadow-lg">Video</span>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Description & Controls */}
+                          <div 
+                            className="flex-1 flex flex-col gap-3 cursor-default"
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onDragStart={(e) => e.stopPropagation()}
+                            draggable="false"
+                          >
+                              <div className="flex items-start gap-6" draggable="false">
+                                <div className="flex-1 flex flex-col gap-2" draggable="false">
+                                  <textarea
+                                    placeholder="Add description for this image..."
+                                    value={item.description}
+                                    draggable="false"
+                                    onDragStart={(e) => e.stopPropagation()}
+                                    onChange={(e) => updateImageDescription(item.id, e.target.value)}
+                                    className="w-full bg-[#051C30]/30 border border-white/5 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-[#48ABBF]/50 transition-all resize-none h-20 cursor-text"
+                                  />
+                                  <input 
+                                    type="text"
+                                    placeholder="Asset Date (optional) e.g. 2024"
+                                    value={item.date || ''}
+                                    draggable="false"
+                                    onDragStart={(e) => e.stopPropagation()}
+                                    onChange={(e) => updateImageDate(item.id, e.target.value)}
+                                    className="w-full bg-[#051C30]/30 border border-white/5 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-[#48ABBF]/50 transition-all cursor-text"
+                                  />
+                                </div>
+
+                                <div className="flex flex-col gap-4 pt-1" draggable="false">
+                                  <button 
+                                    type="button"
+                                    draggable="false"
+                                    onDragStart={(e) => e.stopPropagation()}
+                                    onClick={(e) => { e.stopPropagation(); removeImage(item.id); }}
+                                    onMouseDown={(e) => e.stopPropagation()}
+                                    className="p-3 text-red-400 hover:bg-red-500/10 rounded-xl transition-all cursor-pointer"
+                                    title="Remove"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                  <div className="relative" draggable="false">
+                                    <button 
+                                      type="button"
+                                      draggable="false"
+                                      onDragStart={(e) => e.stopPropagation()}
+                                      onMouseDown={(e) => e.stopPropagation()}
+                                      className="p-5 text-[#48ABBF] hover:bg-[#48ABBF]/10 rounded-xl transition-all cursor-pointer"
+                                      title="Pick Date"
+                                    >
+                                      <Calendar size={20} />
+                                      <input 
+                                        type="date"
+                                        draggable="false"
+                                        onDragStart={(e) => e.stopPropagation()}
+                                        className="absolute inset-0 opacity-0 cursor-pointer"
+                                        onMouseDown={(e) => e.stopPropagation()}
+                                        onChange={(e) => updateImageDate(item.id, e.target.value)}
+                                      />
+                                    </button>
+                                  </div>
+                                </div>
+                              </div>
+                            {item.file && (
+                              <div className="text-[10px] text-white/30 truncate max-w-[300px]">
+                                File: {item.file.name}
+                              </div>
+                            )}
+                          </div>
                         </div>
-                        <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-1">
-                          <span className="bg-[#48ABBF] text-[#051C30] text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">New</span>
-                          {isVid && <span className="bg-purple-500 text-white text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Video</span>}
-                        </div>
-                        <button 
-                          type="button"
-                          onClick={() => removeNewImage(i)}
-                          className="absolute top-1 right-1 p-1 bg-red-500 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X size={12} />
-                        </button>
                       </div>
                     );
                   })}
-
-                  {existingGallery.length === 0 && gallery.length === 0 && (
-                    <div className="col-span-full py-12 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-2xl text-white/20">
-                       <ImageIcon size={32} className="mb-2" />
-                       <p className="text-xs">No images in this collection</p>
+                  
+                  {gallery.length === 0 && (
+                    <div className="py-20 flex flex-col items-center justify-center border-2 border-dashed border-white/5 rounded-3xl text-white/20">
+                       <ImageIcon size={48} className="mb-4 opacity-20" />
+                       <p className="text-sm font-medium">Your gallery is empty</p>
+                       <p className="text-xs mt-1">Upload images to get started</p>
                     </div>
                   )}
                 </div>
               </div>
             </div>
 
-            {/* Progress & Status */}
-            {(isUploading || status) && (
-              <div className="pt-6 border-t border-white/5 space-y-4">
-                {isUploading && (
-                  <div className="space-y-2">
-                    <div className="flex justify-between text-xs font-medium tracking-widest text-[#48ABBF]">
-                      <span>Processing Assets...</span>
-                      <span>{progress}%</span>
-                    </div>
-                    <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
-                      <div className="h-full bg-[#48ABBF] transition-all duration-300" style={{ width: `${progress}%` }} />
-                    </div>
-                  </div>
-                )}
-                {status && (
-                  <div className={`p-4 rounded-xl border flex items-center gap-3 animate-fadeIn ${status.type === 'success' ? 'bg-green-500/10 border-green-500/20 text-green-400' : 'bg-red-500/10 border-red-500/20 text-red-400'}`}>
-                    {status.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
-                    <p className="text-sm font-medium">{status.message}</p>
-                  </div>
-                )}
-              </div>
-            )}
 
             <div className="flex flex-wrap gap-4">
               <button type="submit" disabled={isUploading || isBulkConverting} className="flex-1 h-16 bg-[#48ABBF] hover:bg-[#5bc0d4] disabled:opacity-50 text-[#051C30] font-bold text-lg rounded-2xl transition-all shadow-xl flex items-center justify-center gap-3">
@@ -724,7 +898,7 @@ export default function AdminDashboard() {
               {editingId && (
                 <button 
                   type="button" 
-                  onClick={() => { setEditingId(null); setTitle(''); setDescription(''); setGallery([]); setExistingGallery([]); }}
+                  onClick={() => { setEditingId(null); setTitle(''); setDescription(''); setDate(''); setGallery([]); }}
                   className="px-8 h-16 border border-white/10 hover:bg-white/5 rounded-2xl transition-all text-white/60 font-medium"
                 >
                   Cancel
@@ -777,8 +951,15 @@ export default function AdminDashboard() {
                       <h3 className="font-bold text-xl mb-2 line-clamp-1 group-hover:text-[#48ABBF] transition-colors">{item.title}</h3>
                       <p className="text-white/50 text-sm line-clamp-2 mb-4 flex-1 leading-relaxed">{item.description}</p>
                       <div className="flex items-center justify-between pt-4 border-t border-white/5">
-                        <div className="text-[10px] text-[#48ABBF] uppercase tracking-widest font-bold">
-                          {item.images?.length || 0} Assets
+                        <div className="flex flex-col gap-1">
+                          <div className="text-[10px] text-[#48ABBF] uppercase tracking-widest font-bold">
+                            {item.images?.length || 0} Assets
+                          </div>
+                          {item.date && (
+                            <div className="text-[10px] text-white/40 font-medium">
+                              {item.date}
+                            </div>
+                          )}
                         </div>
                         <div className="text-[10px] text-white/20 font-mono">
                           ID: {item.id}

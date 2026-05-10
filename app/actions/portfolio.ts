@@ -3,13 +3,20 @@
 import { getRequestContext } from '@cloudflare/next-on-pages';
 import { revalidatePath } from 'next/cache';
 
+interface GalleryItem {
+  url: string;
+  description?: string;
+  date?: string;
+}
+
 interface PortfolioGroupData {
   id?: number;
   category: string;
   title: string;
   description: string;
+  date?: string;
   coverImage: string;
-  images: string[];
+  images: (string | GalleryItem)[];
 }
 
 export async function savePortfolioGroup(data: PortfolioGroupData) {
@@ -22,10 +29,10 @@ export async function savePortfolioGroup(data: PortfolioGroupData) {
     const imagesJson = JSON.stringify(data.images);
 
     await db.prepare(
-      `INSERT INTO portfolio_groups (category, title, description, cover_image, images) 
-       VALUES (?, ?, ?, ?, ?)`
+      `INSERT INTO portfolio_groups (category, title, description, date, cover_image, images) 
+       VALUES (?, ?, ?, ?, ?, ?)`
     )
-    .bind(data.category, data.title, data.description, data.coverImage, imagesJson)
+    .bind(data.category, data.title, data.description, data.date || '', data.coverImage, imagesJson)
     .run();
     
     console.log(`[Portfolio Action] Saved new group: ${data.title} in ${data.category}`);
@@ -51,6 +58,7 @@ export async function updatePortfolioGroup(id: number, data: Partial<PortfolioGr
     if (data.category) { sets.push("category = ?"); values.push(data.category); }
     if (data.title) { sets.push("title = ?"); values.push(data.title); }
     if (data.description !== undefined) { sets.push("description = ?"); values.push(data.description); }
+    if (data.date !== undefined) { sets.push("date = ?"); values.push(data.date); }
     if (data.coverImage) { sets.push("cover_image = ?"); values.push(data.coverImage); }
     if (data.images) { sets.push("images = ?"); values.push(JSON.stringify(data.images)); }
 
@@ -108,11 +116,21 @@ export async function getPortfolioGroups(category: string) {
     .bind(category)
     .all();
 
-    return results.map((row: any) => ({
-      ...row,
-      images: JSON.parse(row.images as string),
-      coverImage: row.cover_image,
-    }));
+    return results.map((row: any) => {
+      let rawImages = JSON.parse(row.images as string);
+      // Migration/Normalization: convert string[] to GalleryItem[]
+      const normalizedImages = Array.isArray(rawImages) ? rawImages.map((img: any) => {
+        if (typeof img === 'string') return { url: img, description: '' };
+        return img;
+      }) : [];
+
+      return {
+        ...row,
+        date: row.date || '',
+        images: normalizedImages,
+        coverImage: row.cover_image,
+      };
+    });
   } catch (err) {
     console.error("[Portfolio Action] Fetch Error:", err);
     return [];
@@ -134,11 +152,20 @@ export async function getAllPortfolioGroups() {
     )
     .all();
 
-    return results.map((row: any) => ({
-      ...row,
-      images: JSON.parse(row.images as string),
-      coverImage: row.cover_image,
-    }));
+    return results.map((row: any) => {
+      let rawImages = JSON.parse(row.images as string);
+      const normalizedImages = Array.isArray(rawImages) ? rawImages.map((img: any) => {
+        if (typeof img === 'string') return { url: img, description: '' };
+        return img;
+      }) : [];
+
+      return {
+        ...row,
+        date: row.date || '',
+        images: normalizedImages,
+        coverImage: row.cover_image,
+      };
+    });
   } catch (err) {
     console.error("[Portfolio Action] Fetch All Error:", err);
     return [];

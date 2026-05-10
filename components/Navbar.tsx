@@ -15,6 +15,7 @@ const navLinks = [
 export default function Navbar() {
   const [menuOpen, setMenuOpen] = useState(false);
   const pathname = usePathname();
+  if (pathname?.startsWith('/admin')) return null;
   const isDark = pathname !== "/";
 
   return (

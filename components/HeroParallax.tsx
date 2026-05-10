@@ -170,9 +170,11 @@ export default function HeroParallax() {
   const nayaProgress = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 150, 0), 1);
   const nayaOpacity = Math.min(Math.max((smoothScroll - FULL_ROTATION) / 80, 0), 1);
 
-  // Dense cloud reveal: Removed the top 2 layers to decrease clouds above Naya
+  // Dense cloud reveal: Balanced layers below the character's feet
   const cloudGroups = [
     { count: 4, margin: "-mt-[30vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
+    { count: 4, margin: "-mt-[45vw]" },
     { count: 4, margin: "-mt-[45vw]" },
     { count: 4, margin: "-mt-[45vw]" },
     { count: 4, margin: "-mt-[45vw]" },
@@ -331,7 +333,7 @@ export default function HeroParallax() {
 
         {/* 3. NAYA & CIRCLES */}
         <div
-          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-[8vh]"
+          className="absolute inset-0 z-40 flex items-center justify-center pt-0 mt-0"
           style={{
             transform: `translateY(${(1 - nayaProgress) * 100}vh) translateY(-${nayaStuckOffset * 4.5}px) scale(${(1 + globalProgress * 0.1) * 0.85})`,
             opacity: nayaOpacity

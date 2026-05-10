@@ -41,21 +41,52 @@ function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt:
   useEffect(() => {
     if (!el || !video) return;
 
+    const handlePlayRequest = () => {
+      // Pause any other video that might be playing
+      const allVideos = document.querySelectorAll('video');
+      allVideos.forEach(v => {
+        if (v !== el && !v.paused) v.pause();
+      });
+      el.play().catch(() => {});
+    };
+
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            el.play().catch(() => {});
-          } else {
+          // Stricter intersection: must be significantly visible
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            handlePlayRequest();
+          } else if (!entry.isIntersecting || entry.intersectionRatio < 0.2) {
             el.pause();
           }
         });
       },
-      { threshold: [0, 0.5, 1.0] }
+      { threshold: [0, 0.2, 0.6] }
     );
 
     observer.observe(el);
-    return () => observer.disconnect();
+
+    // Handle "play them in order" - when one ends, try to find the next visible one
+    const handleEnded = () => {
+      const allVideos = Array.from(document.querySelectorAll('video'));
+      const currentIndex = allVideos.indexOf(el);
+      if (currentIndex !== -1 && currentIndex < allVideos.length - 1) {
+        const nextVideo = allVideos[currentIndex + 1];
+        // Only autoplay next if it's somewhat visible
+        const rect = nextVideo.getBoundingClientRect();
+        const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+        if (isVisible) {
+          nextVideo.play().catch(() => {});
+        }
+      }
+    };
+
+    el.addEventListener('ended', handleEnded);
+
+    return () => {
+      observer.disconnect();
+      el.removeEventListener('ended', handleEnded);
+    };
   }, [el, video]);
 
   return (

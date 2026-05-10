@@ -34,7 +34,6 @@ next-env.d.ts
 
 # cloudflare / wrangler
 .wrangler/
-/schema.sql
 .dev.vars
 
 # Temporary files

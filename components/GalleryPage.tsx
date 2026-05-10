@@ -36,15 +36,36 @@ const isVideo = (src: string) => {
 function AssetWithFade({ src, alt, className, onConverted }: { src: string, alt: string, className?: string, onConverted?: (newUrl: string) => void }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const video = isVideo(src);
+  const [el, setEl] = useState<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (!el || !video) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+            el.play().catch(() => {});
+          } else {
+            el.pause();
+          }
+        });
+      },
+      { threshold: [0, 0.5, 1.0] }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [el, video]);
 
   return (
     <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${className?.includes('lightbox-image') ? 'bg-transparent' : 'bg-white/5'}`}>
       {video ? (
         <video
+          ref={setEl}
           src={src}
           onLoadedData={() => setIsLoaded(true)}
           className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          autoPlay
           loop
           muted
           playsInline

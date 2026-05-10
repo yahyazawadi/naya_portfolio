@@ -15,6 +15,7 @@ interface PortfolioGroupData {
   title: string;
   description: string;
   date?: string;
+  displayOrder?: number;
   coverImage: string;
   images: (string | GalleryItem)[];
 }
@@ -29,10 +30,10 @@ export async function savePortfolioGroup(data: PortfolioGroupData) {
     const imagesJson = JSON.stringify(data.images);
 
     await db.prepare(
-      `INSERT INTO portfolio_groups (category, title, description, date, cover_image, images) 
-       VALUES (?, ?, ?, ?, ?, ?)`
+      `INSERT INTO portfolio_groups (category, title, description, date, display_order, cover_image, images) 
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
     )
-    .bind(data.category, data.title, data.description, data.date || '', data.coverImage, imagesJson)
+    .bind(data.category, data.title, data.description, data.date || '', data.displayOrder || 0, data.coverImage, imagesJson)
     .run();
     
     console.log(`[Portfolio Action] Saved new group: ${data.title} in ${data.category}`);
@@ -59,6 +60,7 @@ export async function updatePortfolioGroup(id: number, data: Partial<PortfolioGr
     if (data.title) { sets.push("title = ?"); values.push(data.title); }
     if (data.description !== undefined) { sets.push("description = ?"); values.push(data.description); }
     if (data.date !== undefined) { sets.push("date = ?"); values.push(data.date); }
+    if (data.displayOrder !== undefined) { sets.push("display_order = ?"); values.push(data.displayOrder); }
     if (data.coverImage) { sets.push("cover_image = ?"); values.push(data.coverImage); }
     if (data.images) { sets.push("images = ?"); values.push(JSON.stringify(data.images)); }
 
@@ -127,6 +129,7 @@ export async function getPortfolioGroups(category: string) {
       return {
         ...row,
         date: row.date || '',
+        displayOrder: row.display_order || 0,
         images: normalizedImages,
         coverImage: row.cover_image,
       };
@@ -162,6 +165,7 @@ export async function getAllPortfolioGroups() {
       return {
         ...row,
         date: row.date || '',
+        displayOrder: row.display_order || 0,
         images: normalizedImages,
         coverImage: row.cover_image,
       };

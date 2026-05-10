@@ -33,6 +33,7 @@ export default function AdminDashboard() {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [date, setDate] = useState('');
+  const [displayOrder, setDisplayOrder] = useState<number>(0);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
   const [existingCoverImage, setExistingCoverImage] = useState<string>('');
   const [gallery, setGallery] = useState<{ url?: string; file?: File; description: string; date?: string; id: string }[]>([]);
@@ -78,6 +79,7 @@ export default function AdminDashboard() {
     setDescription(item.description);
     setCategory(item.category);
     setDate(item.date || '');
+    setDisplayOrder(item.displayOrder || 0);
     setExistingCoverImage(item.coverImage);
     setGallery((item.images || []).map((img: any, idx: number) => ({
       url: typeof img === 'string' ? img : img.url,
@@ -504,6 +506,7 @@ export default function AdminDashboard() {
         description, 
         category, 
         date,
+        displayOrder,
         coverImage: finalCoverImage, 
         images: finalGallery 
       };
@@ -517,7 +520,7 @@ export default function AdminDashboard() {
       setProgress(100);
 
       if (!editingId) {
-        setTitle(''); setDescription(''); setDate(''); setThumbnail(null); setGallery([]);
+        setTitle(''); setDescription(''); setDate(''); setDisplayOrder(0); setThumbnail(null); setGallery([]);
       }
       setExistingItems(await getAllPortfolioGroups());
       if (editingId) setTimeout(() => { setEditingId(null); setActiveTab('manage'); }, 2000);
@@ -535,6 +538,7 @@ export default function AdminDashboard() {
     setTitle('');
     setDescription('');
     setDate('');
+    setDisplayOrder(0);
     setCategory('digital-art');
     setThumbnail(null);
     setExistingCoverImage('');
@@ -547,6 +551,7 @@ export default function AdminDashboard() {
     setTitle('');
     setDescription('');
     setDate('');
+    setDisplayOrder(0);
     setThumbnail(null);
     setGallery([]);
     setEditingId(null);
@@ -689,6 +694,18 @@ export default function AdminDashboard() {
                       </div>
                     </div>
                   </div>
+                </div>
+
+                <div className="space-y-3">
+                  <label className="text-sm font-semibold tracking-wider text-[#48ABBF] uppercase">Display Order</label>
+                  <input 
+                    type="number" 
+                    value={displayOrder}
+                    onChange={(e) => setDisplayOrder(Number(e.target.value))}
+                    placeholder="0"
+                    className="w-full bg-[#051C30]/50 border border-white/10 rounded-xl px-5 py-4 focus:outline-none focus:border-[#48ABBF] transition-all"
+                  />
+                  <p className="text-xs text-white/40 ml-1">Lower numbers appear first in the gallery.</p>
                 </div>
 
                 {/* --- Cover Image Section --- */}

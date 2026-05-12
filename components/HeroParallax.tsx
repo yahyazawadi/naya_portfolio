@@ -38,6 +38,8 @@ const glareLayers = [
   { left: '65%', top: '230%', scale: 0.9, opacity: 0.4 },
 ];
 
+const STEPS = [0, 350, 1480];
+
 export default function HeroParallax() {
   const [isDesktop, setIsDesktop] = useState(true);
   const [smoothScroll, setSmoothScroll] = useState(0);
@@ -46,7 +48,6 @@ export default function HeroParallax() {
   const scrollYRef = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const stepRef = useRef(0);
-  const STEPS = [0, 350, 1480]; // Defined keyframes for the reveal
   const isAnimatingRef = useRef(false);
   const requestRef = useRef<number | undefined>(undefined);
 
@@ -135,13 +136,14 @@ export default function HeroParallax() {
   }, []);
 
   // Restore scroll once the hero is done (smoothScroll crosses threshold once)
+  const isHeroDone = smoothScroll > 1400;
   useEffect(() => {
-    if (smoothScroll > 1400 && isDesktop) {
+    if (isHeroDone && isDesktop) {
       document.documentElement.classList.add('hero-done');
     } else {
       document.documentElement.classList.remove('hero-done');
     }
-  }, [smoothScroll > 1400, isDesktop]);
+  }, [isHeroDone, isDesktop]);
 
   // Step 2 (dark blue bg) → white navbar text; steps 0 & 1 (light cloud bg) → dark text
   useEffect(() => {

@@ -33,7 +33,23 @@ const isVideo = (src: string) => {
   return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
 };
 
-function AssetWithFade({ src, alt, className, onConverted, onEnded, isPlaying }: { src: string, alt: string, className?: string, onConverted?: (newUrl: string) => void, onEnded?: () => void, isPlaying?: boolean }) {
+function AssetWithFade({ 
+  src, 
+  alt, 
+  className, 
+  onConverted, 
+  onEnded, 
+  isPlaying, 
+  loop = false 
+}: { 
+  src: string, 
+  alt: string, 
+  className?: string, 
+  onConverted?: (newUrl: string) => void, 
+  onEnded?: () => void, 
+  isPlaying?: boolean, 
+  loop?: boolean 
+}) {
   const [isLoaded, setIsLoaded] = useState(false);
   const video = isVideo(src);
   const [el, setEl] = useState<HTMLVideoElement | null>(null);
@@ -46,7 +62,7 @@ function AssetWithFade({ src, alt, className, onConverted, onEnded, isPlaying }:
     } else {
       el.pause();
     }
-  }, [el, video, isPlaying]);
+  }, [el, video, isPlaying, src]);
 
   useEffect(() => {
     if (!el || !video || !onEnded) return;
@@ -64,6 +80,7 @@ function AssetWithFade({ src, alt, className, onConverted, onEnded, isPlaying }:
           className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
           muted
           playsInline
+          loop={loop}
         />
       ) : (
         <SmartImage
@@ -236,6 +253,8 @@ function Lightbox({
             src={images[currentIndex].url} 
             alt={`Gallery image ${currentIndex + 1}`} 
             className="lightbox-image w-full h-full object-contain pointer-events-auto"
+            isPlaying={true}
+            loop={true}
           />
         </div>
 
@@ -272,18 +291,29 @@ function GroupDetailView({
   group,
   onImageClick,
   onConverted,
+  isLightboxOpen,
+  lightboxIndex,
 }: {
   group: ArtGroup;
   onImageClick: (index: number) => void;
   onConverted: (oldUrl: string, newUrl: string) => void;
+  isLightboxOpen: boolean;
+  lightboxIndex: number | null;
 }) {
   const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+
+  // Sync with lightbox
+  useEffect(() => {
+    if (lightboxIndex !== null) {
+      setPlayingIndex(lightboxIndex);
+    }
+  }, [lightboxIndex]);
 
   // Initialize: start first video
   useEffect(() => {
     const firstVideoIdx = group.images.findIndex(img => isVideo(img.url));
     if (firstVideoIdx !== -1) setPlayingIndex(firstVideoIdx);
-  }, [group.id]);
+  }, [group.id, group.images]);
 
   const handleEnded = (index: number) => {
     // Find next video
@@ -316,8 +346,9 @@ function GroupDetailView({
           alt={`${group.title} ${originalIndex + 1}`} 
           className="w-full h-auto object-cover rounded-[2rem] group-hover/tile:scale-[1.02] duration-700 transition-transform" 
           onConverted={(newUrl) => onConverted(item.url, newUrl)}
-          isPlaying={playingIndex === originalIndex}
+          isPlaying={!isLightboxOpen && playingIndex === originalIndex}
           onEnded={() => handleEnded(originalIndex)}
+          loop={false}
         />
         {(item.date || item.description) && (
           <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">
@@ -516,6 +547,8 @@ export default function GalleryPage({ title, groups: initialGroups }: GalleryPag
             group={selectedGroup} 
             onImageClick={(idx) => setLightboxIndex(idx)} 
             onConverted={handleImageConverted}
+            isLightboxOpen={lightboxIndex !== null}
+            lightboxIndex={lightboxIndex}
           />
         ) : (
           <div className="flex flex-col">

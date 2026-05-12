@@ -22,6 +22,8 @@ const glareLayers = [
   { left: '45%', top: '150%', scale: 1.5, opacity: 0.7 },
 ];
 
+const STEPS = [0, 350, 1480]; // Defined keyframes for the reveal
+
 export default function MobileHeroParallax() {
   const [isMobile, setIsMobile] = useState(true);
   const [smoothScroll, setSmoothScroll] = useState(0);
@@ -30,7 +32,6 @@ export default function MobileHeroParallax() {
   const scrollYRef = useRef(0);
   const [currentStep, setCurrentStep] = useState(0);
   const stepRef = useRef(0);
-  const STEPS = [0, 350, 1480]; // Defined keyframes for the reveal
   const isAnimatingRef = useRef(false);
   const requestRef = useRef<number | undefined>(undefined);
 
@@ -168,13 +169,14 @@ export default function MobileHeroParallax() {
   }, []);
 
   // Restore scroll once the hero is done (smoothScroll crosses threshold once)
+  const isHeroDone = smoothScroll > 1400;
   useEffect(() => {
-    if (smoothScroll > 1400 && isMobile) {
+    if (isHeroDone && isMobile) {
       document.documentElement.classList.add('hero-done-mobile');
     } else {
       document.documentElement.classList.remove('hero-done-mobile');
     }
-  }, [smoothScroll > 1400, isMobile]);
+  }, [isHeroDone, isMobile]);
 
   // Step 2 (dark blue bg) → white navbar text; steps 0 & 1 (light cloud bg) → dark text
   useEffect(() => {

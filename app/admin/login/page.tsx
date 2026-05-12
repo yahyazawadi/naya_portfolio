@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { login } from '../../actions/auth';
 
 export default function LoginPage() {
@@ -87,9 +88,9 @@ export default function LoginPage() {
         </div>
         
         <div className="mt-8 text-center">
-          <a href="/" className="text-white/40 hover:text-[#48ABBF] text-sm transition-colors">
+          <Link href="/" className="text-white/40 hover:text-[#48ABBF] text-sm transition-colors">
             ← Back to Portfolio
-          </a>
+          </Link>
         </div>
       </div>
     </div>

@@ -24,7 +24,7 @@ const portfolioItems = [
   {
     src: "/images/illustrator&photoshop.webp",
     title: "Graphic Design",
-    subtitle: "Illustrator & Photoshop",
+    subtitle: "Designing visual identities for brands, companies, and university projects.",
     href: "/graphic-design",
     type: "narrow",
   },

@@ -11,6 +11,7 @@ export interface GalleryItem {
   url: string;
   description?: string;
   date?: string;
+  thumbnailUrl?: string;
 }
 
 export interface ArtGroup {
@@ -19,6 +20,7 @@ export interface ArtGroup {
   description: string;
   date?: string;
   coverImage: string;
+  coverThumbnailUrl?: string;
   images: GalleryItem[];
 }
 
@@ -30,7 +32,23 @@ interface GalleryPageProps {
 // ─── Utility ──────────────────────────────────────────────────────────────────
 const isVideo = (src: string) => {
   const videoExtensions = ['.mp4', '.webm', '.ogg', '.mov'];
-  return videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
+  return videoExtensions.some(ext => src.toLowerCase().split('?')[0].endsWith(ext));
+};
+
+const cleanVideoUrl = (src: string) => {
+  if (src && src.includes('?poster=')) {
+    return src.split('?poster=')[0];
+  }
+  return src;
+};
+
+const extractPosterUrl = (src: string) => {
+  if (src && src.includes('?poster=')) {
+    try {
+      return decodeURIComponent(src.split('?poster=')[1].split('&')[0]);
+    } catch {}
+  }
+  return undefined;
 };
 
 function AssetWithFade({ 
@@ -40,7 +58,8 @@ function AssetWithFade({
   onConverted, 
   onEnded, 
   isPlaying, 
-  loop = false 
+  loop = false,
+  poster
 }: { 
   src: string, 
   alt: string, 
@@ -48,7 +67,8 @@ function AssetWithFade({
   onConverted?: (newUrl: string) => void, 
   onEnded?: () => void, 
   isPlaying?: boolean, 
-  loop?: boolean 
+  loop?: boolean,
+  poster?: string
 }) {
   const [isLoaded, setIsLoaded] = useState(false);
   const video = isVideo(src);
@@ -70,18 +90,31 @@ function AssetWithFade({
     return () => el.removeEventListener('ended', onEnded);
   }, [el, video, onEnded]);
 
+  const posterUrl = poster || extractPosterUrl(src);
+
   return (
     <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${className?.includes('lightbox-image') ? 'bg-transparent' : 'bg-white/5'}`}>
       {video ? (
-        <video
-          ref={setEl}
-          src={src}
-          onLoadedData={() => setIsLoaded(true)}
-          className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-          muted
-          playsInline
-          loop={loop}
-        />
+        <>
+          <video
+            ref={setEl}
+            src={cleanVideoUrl(src)}
+            poster={posterUrl}
+            onLoadedData={() => setIsLoaded(true)}
+            className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
+            muted
+            playsInline
+            loop={loop}
+          />
+          {posterUrl && (
+            <img
+              src={posterUrl}
+              alt={alt}
+              onLoad={() => setIsLoaded(true)}
+              className={`${className} absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+            />
+          )}
+        </>
       ) : (
         <SmartImage
           src={src}
@@ -144,6 +177,7 @@ function GroupCard({
           alt={group.title} 
           className="w-full h-[300px] md:h-[340px] lg:h-[380px] object-cover" 
           onConverted={(newUrl) => onConverted(group.coverImage, newUrl)}
+          poster={group.coverThumbnailUrl}
         />
         <div className="absolute inset-0 bg-black/0 group-hover/img:bg-black/40 transition-all duration-300 flex items-center justify-center">
           <span className="text-white text-[16px] font-semibold opacity-0 group-hover/img:opacity-100 transition-opacity duration-300 bg-[#48ABBF]/80 px-6 py-3 rounded-full backdrop-blur-sm tracking-wide">
@@ -255,6 +289,7 @@ function Lightbox({
             className="lightbox-image w-full h-full object-contain pointer-events-auto"
             isPlaying={true}
             loop={true}
+            poster={images[currentIndex].thumbnailUrl}
           />
         </div>
 
@@ -349,6 +384,7 @@ function GroupDetailView({
           isPlaying={!isLightboxOpen && playingIndex === originalIndex}
           onEnded={() => handleEnded(originalIndex)}
           loop={false}
+          poster={item.thumbnailUrl}
         />
         {(item.date || item.description) && (
           <div className="px-8 py-7 flex flex-wrap items-baseline gap-x-5 gap-y-2">

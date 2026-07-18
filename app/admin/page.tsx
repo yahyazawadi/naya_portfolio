@@ -22,6 +22,22 @@ const isVideo = (src: string) => {
   return typeof src === 'string' && videoExtensions.some(ext => src.toLowerCase().endsWith(ext));
 };
 
+const cleanVideoUrl = (url: string) => {
+  if (url && url.includes('?poster=')) {
+    return url.split('?poster=')[0];
+  }
+  return url;
+};
+
+const extractPosterUrl = (url: string) => {
+  if (url && url.includes('?poster=')) {
+    try {
+      return decodeURIComponent(url.split('?poster=')[1].split('&')[0]);
+    } catch {}
+  }
+  return undefined;
+};
+
 export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<'upload' | 'manage'>('upload');
   const [existingItems, setExistingItems] = useState<any[]>([]);
@@ -35,8 +51,18 @@ export default function AdminDashboard() {
   const [date, setDate] = useState('');
   const [displayOrder, setDisplayOrder] = useState<number>(0);
   const [thumbnail, setThumbnail] = useState<File | null>(null);
+  const [coverThumbnail, setCoverThumbnail] = useState<File | null>(null);
+  const [coverThumbnailUrl, setCoverThumbnailUrl] = useState<string>('');
   const [existingCoverImage, setExistingCoverImage] = useState<string>('');
-  const [gallery, setGallery] = useState<{ url?: string; file?: File; description: string; date?: string; id: string }[]>([]);
+  const [gallery, setGallery] = useState<{ 
+    url?: string; 
+    file?: File; 
+    description: string; 
+    date?: string; 
+    id: string;
+    thumbnailFile?: File | null;
+    thumbnailUrl?: string;
+  }[]>([]);
   
   const [isUploading, setIsUploading] = useState(false);
   const [status, setStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -73,6 +99,10 @@ export default function AdminDashboard() {
 
 
 
+  const updateImageThumbnail = (id: string, file: File) => {
+    setGallery(prev => prev.map(item => item.id === id ? { ...item, thumbnailFile: file } : item));
+  };
+
   const handleEdit = (item: any) => {
     setEditingId(item.id);
     setTitle(item.title);
@@ -80,13 +110,35 @@ export default function AdminDashboard() {
     setCategory(item.category);
     setDate(item.date || '');
     setDisplayOrder(item.displayOrder || 0);
-    setExistingCoverImage(item.coverImage);
-    setGallery((item.images || []).map((img: any, idx: number) => ({
-      url: typeof img === 'string' ? img : img.url,
-      description: typeof img === 'string' ? '' : (img.description || ''),
-      date: typeof img === 'string' ? '' : (img.date || ''),
-      id: `existing-${idx}-${Date.now()}`
-    })));
+
+    let coverUrl = item.coverImage;
+    let coverPosterUrl = '';
+    if (coverUrl && coverUrl.includes('?poster=')) {
+      const parts = coverUrl.split('?poster=');
+      coverUrl = parts[0];
+      coverPosterUrl = decodeURIComponent(parts[1].split('&')[0]);
+    }
+    setExistingCoverImage(coverUrl);
+    setCoverThumbnailUrl(coverPosterUrl);
+    setCoverThumbnail(null);
+
+    setGallery((item.images || []).map((img: any, idx: number) => {
+      const imgUrl = typeof img === 'string' ? img : img.url;
+      let mainUrl = imgUrl;
+      let posterUrl = '';
+      if (imgUrl && imgUrl.includes('?poster=')) {
+        const parts = imgUrl.split('?poster=');
+        mainUrl = parts[0];
+        posterUrl = decodeURIComponent(parts[1].split('&')[0]);
+      }
+      return {
+        url: mainUrl,
+        thumbnailUrl: posterUrl,
+        description: typeof img === 'string' ? '' : (img.description || ''),
+        date: typeof img === 'string' ? '' : (img.date || ''),
+        id: `existing-${idx}-${Date.now()}`
+      };
+    }));
     setThumbnail(null);
     setActiveTab('upload');
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -118,16 +170,22 @@ export default function AdminDashboard() {
       let newCover = item.coverImage;
       let newImages = [...(item.images || [])];
 
-      if (item.coverImage === oldUrl) {
-        newCover = newUrl;
+      const cleanOld = cleanVideoUrl(oldUrl);
+      const cleanNew = cleanVideoUrl(newUrl);
+
+      if (cleanVideoUrl(item.coverImage) === cleanOld) {
+        const posterPart = item.coverImage.includes('?poster=') ? '?poster=' + item.coverImage.split('?poster=')[1] : '';
+        newCover = cleanNew + posterPart;
         updated = true;
       }
 
       newImages = newImages.map(img => {
         const url = typeof img === 'string' ? img : img.url;
-        if (url === oldUrl) {
+        if (cleanVideoUrl(url) === cleanOld) {
           updated = true;
-          return typeof img === 'string' ? newUrl : { ...img, url: newUrl };
+          const posterPart = url.includes('?poster=') ? '?poster=' + url.split('?poster=')[1] : '';
+          const finalUrl = cleanNew + posterPart;
+          return typeof img === 'string' ? finalUrl : { ...img, url: finalUrl };
         }
         return img;
       });
@@ -138,8 +196,20 @@ export default function AdminDashboard() {
       return item;
     }));
 
-    if (existingCoverImage === oldUrl) setExistingCoverImage(newUrl);
-    setGallery(prev => prev.map(item => item.url === oldUrl ? { ...item, url: newUrl } : item));
+    const cleanOld = cleanVideoUrl(oldUrl);
+    const cleanNew = cleanVideoUrl(newUrl);
+
+    if (cleanVideoUrl(existingCoverImage) === cleanOld) {
+      const posterPart = existingCoverImage.includes('?poster=') ? '?poster=' + existingCoverImage.split('?poster=')[1] : '';
+      setExistingCoverImage(cleanNew + posterPart);
+    }
+    setGallery(prev => prev.map(item => {
+      if (cleanVideoUrl(item.url || '') === cleanOld) {
+        const posterPart = item.url && item.url.includes('?poster=') ? '?poster=' + item.url.split('?poster=')[1] : '';
+        return { ...item, url: cleanNew + posterPart };
+      }
+      return item;
+    }));
   };
 
   const removeImage = (id: string) => {
@@ -481,6 +551,25 @@ export default function AdminDashboard() {
         setProgress(10);
       }
 
+      // Add cover poster query param if it is a video
+      if (isVideo(finalCoverImage)) {
+        let posterUrlToSave = '';
+        if (coverThumbnail) {
+          const optimizedPoster = await optimizeFile(coverThumbnail, 'Cover Thumbnail');
+          const formData = new FormData();
+          formData.append('file', optimizedPoster);
+          const res = await fetch('/api/upload', { method: 'POST', body: formData });
+          if (!res.ok) throw new Error('Cover thumbnail upload failed');
+          const data = await res.json() as { url: string };
+          posterUrlToSave = data.url;
+        } else if (coverThumbnailUrl) {
+          posterUrlToSave = coverThumbnailUrl;
+        }
+        if (posterUrlToSave) {
+          finalCoverImage = `${cleanVideoUrl(finalCoverImage)}?poster=${encodeURIComponent(posterUrlToSave)}&ext=.webm`;
+        }
+      }
+
       if (gallery.length > 0) {
         for (let i = 0; i < gallery.length; i++) {
           const item = gallery[i];
@@ -494,6 +583,25 @@ export default function AdminDashboard() {
             if (!res.ok) throw new Error(`Gallery upload ${i + 1} failed`);
             const data = await res.json() as { url: string };
             url = data.url;
+          }
+
+          // Handle gallery item thumbnail if it is a video
+          if (isVideo(url) || (item.file && item.file.type.startsWith('video/'))) {
+            let itemPosterUrl = '';
+            if (item.thumbnailFile) {
+              const optimizedPoster = await optimizeFile(item.thumbnailFile, `Gallery ${i + 1} Thumbnail`);
+              const formData = new FormData();
+              formData.append('file', optimizedPoster);
+              const res = await fetch('/api/upload', { method: 'POST', body: formData });
+              if (!res.ok) throw new Error(`Gallery item ${i + 1} thumbnail upload failed`);
+              const data = await res.json() as { url: string };
+              itemPosterUrl = data.url;
+            } else if (item.thumbnailUrl) {
+              itemPosterUrl = item.thumbnailUrl;
+            }
+            if (itemPosterUrl) {
+              url = `${cleanVideoUrl(url)}?poster=${encodeURIComponent(itemPosterUrl)}&ext=.webm`;
+            }
           }
 
           finalGallery.push({ url, description: item.description, date: item.date || '' });
@@ -520,7 +628,7 @@ export default function AdminDashboard() {
       setProgress(100);
 
       if (!editingId) {
-        setTitle(''); setDescription(''); setDate(''); setDisplayOrder(0); setThumbnail(null); setGallery([]);
+        setTitle(''); setDescription(''); setDate(''); setDisplayOrder(0); setThumbnail(null); setCoverThumbnail(null); setCoverThumbnailUrl(''); setGallery([]);
       }
       setExistingItems(await getAllPortfolioGroups());
       if (editingId) setTimeout(() => { setEditingId(null); setActiveTab('manage'); }, 2000);
@@ -541,6 +649,8 @@ export default function AdminDashboard() {
     setDisplayOrder(0);
     setCategory('digital-art');
     setThumbnail(null);
+    setCoverThumbnail(null);
+    setCoverThumbnailUrl('');
     setExistingCoverImage('');
     setGallery([]);
     setStatus(null);
@@ -553,6 +663,8 @@ export default function AdminDashboard() {
     setDate('');
     setDisplayOrder(0);
     setThumbnail(null);
+    setCoverThumbnail(null);
+    setCoverThumbnailUrl('');
     setGallery([]);
     setEditingId(null);
   };
@@ -714,7 +826,7 @@ export default function AdminDashboard() {
                   {editingId && existingCoverImage && !thumbnail && (
                     <div className="relative group w-full h-40 rounded-xl overflow-hidden mb-4 border border-white/10">
                       {isVideo(existingCoverImage) ? (
-                        <video src={existingCoverImage} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                        <video src={cleanVideoUrl(existingCoverImage)} poster={extractPosterUrl(existingCoverImage)} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                       ) : (
                         <SmartImage 
                           src={existingCoverImage} 
@@ -744,6 +856,38 @@ export default function AdminDashboard() {
                         <span className="text-sm text-white/40">Select cover asset (Image/Video)</span>
                       )}
                     </label>
+                  )}
+                  
+                  {/* Video Poster Uploader */}
+                  {((thumbnail && thumbnail.type.startsWith('video/')) || (!thumbnail && isVideo(existingCoverImage))) && (
+                    <div className="mt-4 p-4 bg-[#051C30]/40 border border-white/10 rounded-2xl space-y-3">
+                      <label className="text-xs font-semibold tracking-wider text-[#48ABBF] uppercase block">Video Poster (Optional Thumbnail)</label>
+                      {coverThumbnailUrl && !coverThumbnail && (
+                        <div className="flex items-center gap-3">
+                          <div className="relative w-16 h-16 rounded overflow-hidden border border-white/10">
+                            <img src={coverThumbnailUrl} className="w-full h-full object-cover" alt="" />
+                          </div>
+                          <label className="cursor-pointer text-[10px] text-[#48ABBF] hover:text-white transition-colors font-bold">
+                            Replace Poster
+                            <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                              if (e.target.files && e.target.files[0]) setCoverThumbnail(e.target.files[0]);
+                            }} />
+                          </label>
+                        </div>
+                      )}
+                      {(!coverThumbnailUrl || coverThumbnail) && (
+                        <label className={`relative flex items-center justify-center h-12 border border-dashed rounded-xl cursor-pointer transition-all ${coverThumbnail ? 'border-[#48ABBF] bg-[#48ABBF]/5' : 'border-white/10 hover:border-white/20'}`}>
+                          <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                            if (e.target.files && e.target.files[0]) setCoverThumbnail(e.target.files[0]);
+                          }} />
+                          {coverThumbnail ? (
+                            <span className="text-xs text-[#48ABBF] px-2 truncate max-w-[200px]">{coverThumbnail.name}</span>
+                          ) : (
+                            <span className="text-xs text-white/40">Select Poster Image</span>
+                          )}
+                        </label>
+                      )}
+                    </div>
                   )}
                 </div>
               </div>
@@ -781,7 +925,7 @@ export default function AdminDashboard() {
                           <div className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 bg-black/20">
                             {item.url ? (
                               isVid ? (
-                                <video src={item.url} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                                <video src={cleanVideoUrl(item.url)} poster={item.thumbnailUrl || extractPosterUrl(item.url)} className="w-full h-full object-cover" autoPlay loop muted playsInline />
                               ) : (
                                 <SmartImage 
                                   src={item.url} 
@@ -835,6 +979,41 @@ export default function AdminDashboard() {
                                     onChange={(e) => updateImageDate(item.id, e.target.value)}
                                     className="w-full bg-[#051C30]/30 border border-white/5 rounded-lg px-3 py-2 text-[11px] focus:outline-none focus:border-[#48ABBF]/50 transition-all cursor-text"
                                   />
+                                  
+                                  {isVid && (
+                                    <div className="mt-2 space-y-2" draggable="false" onDragStart={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
+                                      <span className="text-[10px] font-semibold text-[#48ABBF] uppercase tracking-wider block">Video Thumbnail</span>
+                                      {item.thumbnailUrl && !item.thumbnailFile && (
+                                        <div className="flex items-center gap-3">
+                                          <div className="relative w-12 h-12 rounded overflow-hidden border border-white/10">
+                                            <img src={item.thumbnailUrl} className="w-full h-full object-cover" alt="" />
+                                          </div>
+                                          <label className="cursor-pointer text-[10px] text-[#48ABBF] hover:text-white transition-colors font-bold">
+                                            Replace
+                                            <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                              if (e.target.files && e.target.files[0]) {
+                                                updateImageThumbnail(item.id, e.target.files[0]);
+                                              }
+                                            }} />
+                                          </label>
+                                        </div>
+                                      )}
+                                      {(!item.thumbnailUrl || item.thumbnailFile) && (
+                                        <label className={`relative flex items-center justify-center h-10 border border-dashed rounded-lg cursor-pointer transition-all ${item.thumbnailFile ? 'border-[#48ABBF] bg-[#48ABBF]/5' : 'border-white/10 hover:border-white/20'}`}>
+                                          <input type="file" className="hidden" accept="image/*" onChange={(e) => {
+                                            if (e.target.files && e.target.files[0]) {
+                                              updateImageThumbnail(item.id, e.target.files[0]);
+                                            }
+                                          }} />
+                                          {item.thumbnailFile ? (
+                                            <span className="text-[10px] text-[#48ABBF] px-2 truncate max-w-[200px]">{item.thumbnailFile.name}</span>
+                                          ) : (
+                                            <span className="text-[10px] text-white/40">Select Thumbnail</span>
+                                          )}
+                                        </label>
+                                      )}
+                                    </div>
+                                  )}
                                 </div>
 
                                 <div className="flex flex-col gap-4 pt-1" draggable="false">
@@ -941,7 +1120,7 @@ export default function AdminDashboard() {
                   <div key={item.id} className="group bg-[#0F314D]/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col hover:border-[#48ABBF]/30 transition-all duration-300">
                     <div className="relative h-48">
                       {isVideo(item.coverImage) ? (
-                        <video src={item.coverImage} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
+                        <video src={cleanVideoUrl(item.coverImage)} poster={extractPosterUrl(item.coverImage)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
                       ) : (
                         <SmartImage 
                           src={item.coverImage} 

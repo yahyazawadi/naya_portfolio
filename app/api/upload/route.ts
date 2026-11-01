@@ -34,14 +34,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    const fileExtension = file.name.split('.').pop() || 'bin';
+    const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'bin';
     const fileName = `${Date.now()}-${Math.random().toString(36).substring(2, 9)}.${fileExtension}`;
+    
+    // Explicit MIME detection to guarantee video/mp4, video/webm, image/webp on Apple and all browsers
+    const mimeMap: Record<string, string> = {
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      mov: 'video/quicktime',
+      ogg: 'video/ogg',
+      webp: 'image/webp',
+      png: 'image/png',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      gif: 'image/gif'
+    };
+    const resolvedContentType = (file.type && file.type !== 'application/octet-stream')
+      ? file.type
+      : (mimeMap[fileExtension] || file.type || 'application/octet-stream');
     
     const context = getRequestContext();
     const env = context?.env || (process.env as any);
     const r2PublicUrl = env.NEXT_PUBLIC_R2_PUBLIC_URL || 'https://pub-49f6712bf69144dbb92c254052a438e3.r2.dev';
 
-    console.log(`[Upload] Processing: ${fileName} (${file.type}, ${file.size} bytes)`);
+    console.log(`[Upload] Processing: ${fileName} (${resolvedContentType}, ${file.size} bytes)`);
 
     // Use ArrayBuffer for maximum binary compatibility, converted to Uint8Array
     // This is safer than streaming for binary integrity in some environments

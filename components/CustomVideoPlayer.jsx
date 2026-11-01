@@ -824,7 +824,6 @@ export function CustomVideoPlayer({
               console.error('Video load error:', e.target.error);
               setVideoError(true);
             }}
-            crossOrigin="anonymous"
           />
 
           {/* Subtitle / Closed Caption Overlay (Broadcast Standard) */}

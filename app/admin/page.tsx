@@ -468,48 +468,9 @@ export default function AdminDashboard() {
         const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || file.name;
         
         if (isVid) {
-          setStatus({ type: 'success', message: `🎬 Optimizing ${label}... 0%` });
-          const blob = await new Promise<Blob>((resolve, reject) => {
-            const url = URL.createObjectURL(file);
-            const video = document.createElement('video');
-            video.src = url;
-            video.muted = true;
-            video.playsInline = true;
-            const container = document.createElement('div');
-            container.style.cssText = 'position:fixed; top:-9999px; pointer-events:none;';
-            container.appendChild(video);
-            document.body.appendChild(container);
-
-            video.onloadedmetadata = () => {
-              container.style.width = `${video.videoWidth}px`;
-              container.style.height = `${video.videoHeight}px`;
-              const stream = (video as any).captureStream ? (video as any).captureStream() : (video as any).mozCaptureStream();
-              const recorder = new MediaRecorder(stream, { 
-                mimeType: MediaRecorder.isTypeSupported('video/webm;codecs=vp9') ? 'video/webm;codecs=vp9' : 'video/webm',
-                videoBitsPerSecond: 5000000 
-              });
-              const chunks: Blob[] = [];
-              recorder.ondataavailable = (e) => chunks.push(e.data);
-              recorder.onstop = () => {
-                document.body.removeChild(container);
-                URL.revokeObjectURL(url);
-                resolve(new Blob(chunks, { type: 'video/webm' }));
-              };
-              video.onended = () => recorder.stop();
-              video.ontimeupdate = () => {
-                const p = Math.round((video.currentTime / video.duration) * 100);
-                setStatus({ type: 'success', message: `🎬 Optimizing ${label}... ${p}%` });
-              };
-              recorder.start();
-              video.play();
-            };
-            video.onerror = () => {
-              document.body.removeChild(container);
-              URL.revokeObjectURL(url);
-              reject(new Error(`Failed to load ${label} for optimization`));
-            };
-          });
-          return new File([blob], `${baseName}.webm`, { type: 'video/webm' });
+          // Keep original video intact (MP4/WebM/MOV) with audio tracks preserved!
+          setStatus({ type: 'success', message: `🎬 Preparing video ${label}...` });
+          return file;
         } else {
           setStatus({ type: 'success', message: `🖼️ Optimizing ${label}...` });
           const blob = await new Promise<Blob>((resolve, reject) => {
@@ -567,7 +528,7 @@ export default function AdminDashboard() {
           posterUrlToSave = coverThumbnailUrl;
         }
         if (posterUrlToSave) {
-          finalCoverImage = `${cleanVideoUrl(finalCoverImage)}?poster=${encodeURIComponent(posterUrlToSave)}&ext=.webm`;
+          finalCoverImage = `${cleanVideoUrl(finalCoverImage)}?poster=${encodeURIComponent(posterUrlToSave)}`;
         }
       }
 
@@ -601,7 +562,7 @@ export default function AdminDashboard() {
               itemPosterUrl = item.thumbnailUrl;
             }
             if (itemPosterUrl) {
-              url = `${cleanVideoUrl(url)}?poster=${encodeURIComponent(itemPosterUrl)}&ext=.webm`;
+              url = `${cleanVideoUrl(url)}?poster=${encodeURIComponent(itemPosterUrl)}`;
             }
           }
 

@@ -959,7 +959,7 @@ export function CustomVideoPlayer({
                 flexDirection: 'column',
                 gap: '12px',
                 direction: 'ltr',
-                zIndex: 5
+                zIndex: 30
               }}
             >
               

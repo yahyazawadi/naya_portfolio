@@ -107,7 +107,7 @@ function AssetWithFade({
             loop={loop}
             muted={false}
             playsInline
-            className={className}
+            className="w-full h-full max-w-full max-h-full"
             onEnded={onEnded}
             onLoadedData={() => setIsLoaded(true)}
             objectFit="contain"
@@ -300,11 +300,11 @@ function Lightbox({
       </button>
 
       <div 
-        className="relative w-full h-full flex items-center justify-center" 
+        className="relative w-full h-full flex items-center justify-center p-2 md:p-6" 
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Main Image - Takes full screen space */}
-        <div className="w-full h-full flex items-center justify-center p-2 md:p-6">
+        {/* Main Video / Image container */}
+        <div className="w-full h-full flex items-center justify-center max-w-7xl max-h-[90vh]">
           <AssetWithFade 
             src={images[currentIndex].url} 
             alt={`Gallery image ${currentIndex + 1}`} 
@@ -315,18 +315,18 @@ function Lightbox({
           />
         </div>
 
-        {/* Floating Info & Navigation Overlay */}
-        <div className="absolute bottom-8 md:bottom-16 left-0 right-0 flex flex-col items-center gap-6 pointer-events-none z-[220]">
+        {/* Floating Info & Navigation Overlay - position higher so it never covers the video player controls */}
+        <div className="absolute top-6 left-6 right-16 md:right-24 flex items-center gap-4 pointer-events-none z-[150]">
           {/* Description & Date Badge */}
           {(images[currentIndex].description || images[currentIndex].date) && (
-            <div className="bg-black/70 backdrop-blur-xl px-10 py-4 rounded-[2rem] border border-white/10 max-w-[90vw] md:max-w-3xl text-center animate-fadeIn pointer-events-auto flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2 mx-6 shadow-2xl">
+            <div className="bg-black/75 backdrop-blur-xl px-6 py-2.5 rounded-full border border-white/10 max-w-[80vw] text-left animate-fadeIn pointer-events-auto flex items-center gap-3 shadow-2xl">
               {images[currentIndex].date && (
-                <span className="text-[#48ABBF] text-[13px] font-black uppercase tracking-[0.3em] whitespace-nowrap">
+                <span className="text-[#48ABBF] text-[12px] font-black uppercase tracking-[0.2em] whitespace-nowrap">
                   {images[currentIndex].date}
                 </span>
               )}
               {images[currentIndex].description && (
-                <p className="text-white text-base md:text-xl leading-relaxed font-bold tracking-tight">
+                <p className="text-white text-sm md:text-base leading-snug font-bold truncate">
                   {images[currentIndex].description}
                 </p>
               )}
@@ -334,7 +334,7 @@ function Lightbox({
           )}
 
           {/* Page Indicator */}
-          <div className="bg-white/5 backdrop-blur-md px-6 py-2 rounded-full border border-white/5 text-white/50 text-[12px] font-black tracking-[0.5em] uppercase pointer-events-auto">
+          <div className="bg-black/60 backdrop-blur-md px-4 py-2 rounded-full border border-white/10 text-white/60 text-[11px] font-black tracking-[0.3em] uppercase pointer-events-auto shrink-0 ml-auto">
             {currentIndex + 1} / {images.length}
           </div>
         </div>

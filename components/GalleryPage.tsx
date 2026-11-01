@@ -5,6 +5,7 @@ import { X, ChevronLeft, ChevronRight, ArrowLeft } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Footer from './Footer';
 import SmartImage from './SmartImage';
+import CustomVideoPlayer from './CustomVideoPlayer';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface GalleryItem {
@@ -92,29 +93,50 @@ function AssetWithFade({
 
   const posterUrl = poster || extractPosterUrl(src);
 
+  const isLightbox = className?.includes('lightbox-image');
+
   return (
-    <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${className?.includes('lightbox-image') ? 'bg-transparent' : 'bg-white/5'}`}>
+    <div className={`relative w-full h-full flex items-center justify-center rounded-sm overflow-hidden ${isLightbox ? 'bg-transparent' : 'bg-white/5'}`}>
       {video ? (
-        <>
-          <video
-            ref={setEl}
+        isLightbox ? (
+          <CustomVideoPlayer
             src={cleanVideoUrl(src)}
             poster={posterUrl}
-            onLoadedData={() => setIsLoaded(true)}
-            className={`${className} transition-all duration-700 ${isLoaded ? 'opacity-100' : 'opacity-0'}`}
-            muted
-            playsInline
+            title={alt}
+            autoPlay={true}
             loop={loop}
+            muted={false}
+            playsInline
+            className={className}
+            onEnded={onEnded}
+            onLoadedData={() => setIsLoaded(true)}
+            objectFit="contain"
           />
-          {posterUrl && (
-            <img
-              src={posterUrl}
-              alt={alt}
-              onLoad={() => setIsLoaded(true)}
-              className={`${className} absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+        ) : (
+          <>
+            <CustomVideoPlayer
+              src={cleanVideoUrl(src)}
+              poster={posterUrl}
+              autoPlay={isPlaying}
+              loop={loop}
+              muted={true}
+              playsInline
+              controlsAlwaysHidden={true}
+              className={className}
+              onEnded={onEnded}
+              onLoadedData={() => setIsLoaded(true)}
+              objectFit="cover"
             />
-          )}
-        </>
+            {posterUrl && (
+              <img
+                src={posterUrl}
+                alt={alt}
+                onLoad={() => setIsLoaded(true)}
+                className={`${className} absolute inset-0 w-full h-full object-cover transition-opacity duration-500 pointer-events-none ${isPlaying ? 'opacity-0' : 'opacity-100'}`}
+              />
+            )}
+          </>
+        )
       ) : (
         <SmartImage
           src={src}

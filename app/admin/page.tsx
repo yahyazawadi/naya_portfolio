@@ -9,6 +9,7 @@ import { uploadImage } from '../actions/upload';
 import { savePortfolioGroup, getAllPortfolioGroups, deletePortfolioGroup, updatePortfolioGroup } from '../actions/portfolio';
 import { logout } from '../actions/auth';
 import SmartImage from '@/components/SmartImage';
+import CustomVideoPlayer from '@/components/CustomVideoPlayer';
 
 const categories = [
   { id: 'digital-art', label: 'Digital art & Illustrations' },
@@ -826,7 +827,16 @@ export default function AdminDashboard() {
                   {editingId && existingCoverImage && !thumbnail && (
                     <div className="relative group w-full h-40 rounded-xl overflow-hidden mb-4 border border-white/10">
                       {isVideo(existingCoverImage) ? (
-                        <video src={cleanVideoUrl(existingCoverImage)} poster={extractPosterUrl(existingCoverImage)} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                        <CustomVideoPlayer 
+                          src={cleanVideoUrl(existingCoverImage)} 
+                          poster={extractPosterUrl(existingCoverImage)} 
+                          className="w-full h-full object-cover" 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          controlsAlwaysHidden={true}
+                        />
                       ) : (
                         <SmartImage 
                           src={existingCoverImage} 
@@ -925,7 +935,16 @@ export default function AdminDashboard() {
                           <div className="relative w-32 h-32 flex-shrink-0 rounded-xl overflow-hidden border border-white/10 bg-black/20">
                             {item.url ? (
                               isVid ? (
-                                <video src={cleanVideoUrl(item.url)} poster={item.thumbnailUrl || extractPosterUrl(item.url)} className="w-full h-full object-cover" autoPlay loop muted playsInline />
+                                <CustomVideoPlayer 
+                                  src={cleanVideoUrl(item.url)} 
+                                  poster={item.thumbnailUrl || extractPosterUrl(item.url)} 
+                                  className="w-full h-full object-cover" 
+                                  autoPlay 
+                                  loop 
+                                  muted 
+                                  playsInline 
+                                  controlsAlwaysHidden={true}
+                                />
                               ) : (
                                 <SmartImage 
                                   src={item.url} 
@@ -1120,7 +1139,16 @@ export default function AdminDashboard() {
                   <div key={item.id} className="group bg-[#0F314D]/40 border border-white/5 rounded-2xl overflow-hidden backdrop-blur-sm flex flex-col hover:border-[#48ABBF]/30 transition-all duration-300">
                     <div className="relative h-48">
                       {isVideo(item.coverImage) ? (
-                        <video src={cleanVideoUrl(item.coverImage)} poster={extractPosterUrl(item.coverImage)} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" autoPlay loop muted playsInline />
+                        <CustomVideoPlayer 
+                          src={cleanVideoUrl(item.coverImage)} 
+                          poster={extractPosterUrl(item.coverImage)} 
+                          className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-all duration-500" 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          controlsAlwaysHidden={true}
+                        />
                       ) : (
                         <SmartImage 
                           src={item.coverImage} 
